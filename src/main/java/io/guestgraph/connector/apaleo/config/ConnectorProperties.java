@@ -23,7 +23,8 @@ public record ConnectorProperties(
     Apaleo apaleo,
     Reconcile reconcile,
     Duration resyncAfterGap,
-    String refreshCron) {
+    String refreshCron,
+    Boolean syncOnBoot) {
 
   public record Apaleo(
       String identityUrl,
@@ -51,6 +52,8 @@ public record ConnectorProperties(
         + resyncAfterGap
         + ", refreshCron="
         + refreshCron
+        + ", syncOnBoot="
+        + syncOnBoot
         + "]";
   }
 }

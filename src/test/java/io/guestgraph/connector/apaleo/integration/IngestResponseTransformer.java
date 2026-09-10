@@ -49,7 +49,7 @@ final class IngestResponseTransformer implements ResponseDefinitionTransformerV2
     JsonNode body = MAPPER.readTree(serveEvent.getRequest().getBodyAsString());
     ArrayNode results = MAPPER.createArrayNode();
     List<JsonNode> records = new ArrayList<>();
-    body.path("records").forEach(records::add);
+    (body.isArray() ? body : body.path("records")).forEach(records::add);
     for (JsonNode record : records) {
       String key = record.path("externalKey").asString();
       String status = OVERRIDES.getOrDefault(key, "CREATED_GUEST");

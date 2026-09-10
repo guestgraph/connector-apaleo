@@ -116,6 +116,7 @@ public abstract class ConnectorIntegrationTest {
     registry.add("spring.datasource.password", POSTGRES::getPassword);
     registry.add("connector.public-url", () -> "https://connector.example");
     registry.add("connector.ops-token", () -> OPS_TOKEN);
+    registry.add("connector.sync-on-boot", () -> "false");
     registry.add("connector.connections-file", () -> CONNECTIONS_FILE.toString());
     registry.add("connector.apaleo.identity-url", APALEO::baseUrl);
     registry.add("connector.apaleo.api-url", APALEO::baseUrl);

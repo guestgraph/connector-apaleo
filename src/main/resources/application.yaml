@@ -40,6 +40,8 @@ connector:
   engine-source-system: ${ENGINE_SOURCE_SYSTEM:apaleo}
   resync-after-gap: ${RESYNC_AFTER_GAP:PT24H}
   refresh-cron: ${REFRESH_CRON:0 0 3 * * *}
+  # A connection with no sync point yet gets a full sync at start; tests turn this off.
+  sync-on-boot: ${SYNC_ON_BOOT:true}
   reconcile:
     interval: ${RECONCILE_INTERVAL:PT15M}
     overlap: ${RECONCILE_OVERLAP:PT1H}

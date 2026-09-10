@@ -4,6 +4,7 @@ import io.guestgraph.connector.apaleo.persistence.repo.ConnectionRepo;
 import java.time.Clock;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -30,6 +31,7 @@ public class ConnectionRegistrar {
   }
 
   @EventListener(ApplicationReadyEvent.class)
+  @Order(1)
   @Transactional
   public void register() {
     for (ConnectionConfig c : connections.all()) {
