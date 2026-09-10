@@ -1,6 +1,6 @@
 {
-  "id": "KLMNPQRS-1",
-  "bookingId": "KLMNPQRS",
+  "id": "XPGMSXGF-1",
+  "bookingId": "XPGMSXGF",
   "status": "Confirmed",
   "property": {
     "id": "BER",
@@ -19,48 +19,40 @@
   },
   "arrival": "2026-08-01T15:00:00+02:00",
   "departure": "2026-08-04T11:00:00+02:00",
-  "created": "2026-07-02T10:00:00Z",
-  "modified": "2026-07-10T08:15:00Z",
-  "adults": 3,
+  "created": "2026-07-01T09:12:00Z",
+  "modified": "2026-07-09T14:30:00Z",
+  "adults": 2,
   "childrenAges": [],
-  "channelCode": "ChannelManager",
-  "source": "Agency",
+  "channelCode": "Ibe",
+  "source": "Website",
   "primaryGuest": {
-    "title": "Mrs",
+    "title": "Ms",
     "gender": "Female",
-    "firstName": "Eva",
-    "lastName": "Keller",
-    "email": "eva.keller@example.com",
-    "phone": "+41441234567",
+    "firstName": "Anna",
+    "lastName": "Muster",
+    "email": "anna@example.com",
+    "phone": "+41791112233",
     "address": {
-      "addressLine1": "Seestrasse 10",
-      "postalCode": "8002",
+      "addressLine1": "Bahnhofstrasse 1",
+      "postalCode": "8001",
       "city": "Zürich",
       "countryCode": "CH"
     },
     "nationalityCountryCode": "CH",
-    "identificationNumber": "Y7654321",
+    "identificationNumber": "X1234567",
     "identificationType": "PassportNumber",
-    "birthDate": "1979-06-21",
-    "preferredLanguage": "de",
-    "company": {
-      "name": "Keller & Co",
-      "taxId": "CHE-111.222.333"
-    }
+    "identificationIssueDate": "2020-05-04",
+    "identificationExpiryDate": "2030-05-03",
+    "birthDate": "1984-03-12",
+    "birthPlace": "Bern",
+    "preferredLanguage": "de"
   },
   "additionalGuests": [
     {
-      "firstName": "Felix",
-      "lastName": "Keller",
-      "birthDate": "1978-02-02",
+      "firstName": "Bruno",
+      "lastName": "Muster",
+      "birthDate": "1982-11-30",
       "relationshipToPrimaryGuest": "Spouse"
-    },
-    {
-      "firstName": "Greta",
-      "lastName": "Keller",
-      "email": "greta@example.com",
-      "identificationType": "IdNumber",
-      "relationshipToPrimaryGuest": "Child"
     }
   ],
   "totalGrossAmount": {
@@ -160,15 +152,7 @@
       ]
     }
   ],
-  "externalCode": "OTA-778812",
-  "externalReferences": {
-    "onlineTravelAgencyId": "OTA-778812"
-  },
-  "company": {
-    "id": "WEBER",
-    "code": "WEBER",
-    "name": "Weber Reisen GmbH",
-    "canCheckOutOnAr": false
-  },
-  "corporateCode": "WEBER"
+  "comment": "Late arrival",
+  "guestComment": "Quiet room please",
+  "travelPurpose": "Leisure"
 }

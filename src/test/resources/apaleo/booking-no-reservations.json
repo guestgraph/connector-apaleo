@@ -1,0 +1,12 @@
+{
+  "id": "EMPTYBKG",
+  "booker": {
+    "firstName": "Hana",
+    "lastName": "Sato",
+    "email": "hana.sato@example.com"
+  },
+  "hasActivePaymentAccount": false,
+  "created": "2026-09-01T12:00:00Z",
+  "modified": "2026-09-01T12:00:00Z",
+  "reservations": []
+}

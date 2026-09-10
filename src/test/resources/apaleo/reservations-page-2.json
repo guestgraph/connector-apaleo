@@ -1,6 +1,155 @@
 {
   "reservations": [
     {
+      "id": "KLMNPQRS-2",
+      "bookingId": "KLMNPQRS",
+      "status": "Confirmed",
+      "property": {
+        "id": "BER",
+        "code": "BER",
+        "name": "Berlin"
+      },
+      "ratePlan": {
+        "id": "BER-STD",
+        "code": "STD",
+        "name": "Standard"
+      },
+      "unitGroup": {
+        "id": "BER-SGL",
+        "code": "SGL",
+        "name": "Single"
+      },
+      "arrival": "2026-08-03T15:00:00+02:00",
+      "departure": "2026-08-06T11:00:00+02:00",
+      "created": "2026-07-02T10:00:00Z",
+      "modified": "2026-07-10T08:15:00Z",
+      "adults": 1,
+      "childrenAges": [],
+      "channelCode": "ChannelManager",
+      "source": "Agency",
+      "primaryGuest": {
+        "title": "Mrs",
+        "gender": "Female",
+        "firstName": "Eva",
+        "lastName": "Keller",
+        "email": "eva.keller@example.com",
+        "phone": "+41441234567",
+        "address": {
+          "addressLine1": "Seestrasse 10",
+          "postalCode": "8002",
+          "city": "Zürich",
+          "countryCode": "CH"
+        },
+        "nationalityCountryCode": "CH",
+        "identificationNumber": "Y7654321",
+        "identificationType": "PassportNumber",
+        "birthDate": "1979-06-21",
+        "preferredLanguage": "de",
+        "company": {
+          "name": "Keller & Co",
+          "taxId": "CHE-111.222.333"
+        }
+      },
+      "additionalGuests": [],
+      "totalGrossAmount": {
+        "amount": 300.0,
+        "currency": "EUR"
+      },
+      "balance": {
+        "amount": 0.0,
+        "currency": "EUR"
+      },
+      "guaranteeType": "CreditCard",
+      "isPreCheckedIn": false,
+      "isOpenForCharges": true,
+      "hasCityTax": true,
+      "paymentAccount": {
+        "accountNumber": "411111******1111",
+        "accountHolder": "Card Holder",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false,
+        "isActive": true
+      },
+      "hasActivePaymentAccount": true,
+      "registeredCard": {
+        "cardNumber": "411111******1111",
+        "cardHolder": "Card Holder",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false
+      },
+      "timeSlices": [
+        {
+          "from": "2026-08-03T15:00:00+02:00",
+          "to": "2026-08-06T11:00:00+02:00",
+          "serviceDate": "2026-08-03",
+          "ratePlan": {
+            "id": "BER-STD",
+            "code": "STD",
+            "name": "Standard"
+          },
+          "unitGroup": {
+            "id": "BER-SGL",
+            "code": "SGL",
+            "name": "Single"
+          },
+          "baseAmount": {
+            "grossAmount": 150.0,
+            "netAmount": 140.19,
+            "vatType": "Reduced",
+            "vatPercent": 7.0,
+            "currency": "EUR"
+          },
+          "totalGrossAmount": {
+            "amount": 150.0,
+            "currency": "EUR"
+          }
+        }
+      ],
+      "services": [
+        {
+          "service": {
+            "id": "BER-BRK",
+            "code": "BRK",
+            "name": "Breakfast",
+            "description": "Buffet",
+            "pricingUnit": "Person",
+            "defaultGrossPrice": {
+              "amount": 18.0,
+              "currency": "EUR"
+            },
+            "channelCodes": [
+              "Direct"
+            ]
+          },
+          "totalAmount": {
+            "grossAmount": 54.0,
+            "netAmount": 50.47,
+            "vatType": "Reduced",
+            "vatPercent": 7.0,
+            "currency": "EUR"
+          },
+          "dates": [
+            {
+              "serviceDate": "2026-08-02",
+              "count": 3,
+              "amount": {
+                "grossAmount": 54.0,
+                "netAmount": 50.47,
+                "vatType": "Reduced",
+                "vatPercent": 7.0,
+                "currency": "EUR"
+              },
+              "isMandatory": false
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "QRTLMNOP-1",
       "bookingId": "QRTLMNOP",
       "status": "Canceled",
@@ -23,23 +172,31 @@
       "departure": "2026-09-12T11:00:00+02:00",
       "created": "2026-08-20T08:00:00Z",
       "modified": "2026-08-25T17:45:10Z",
-      "cancellationTime": "2026-08-25T17:45:10Z",
       "adults": 1,
       "childrenAges": [],
       "channelCode": "BookingCom",
       "source": "Booking.com",
       "primaryGuest": {
-        "lastName": "Nguyen",
         "firstName": "Linh",
+        "lastName": "Nguyen",
         "email": "linh.nguyen@example.com"
       },
       "additionalGuests": [],
-      "hasActivePaymentAccount": false,
+      "totalGrossAmount": {
+        "amount": 300.0,
+        "currency": "EUR"
+      },
+      "balance": {
+        "amount": 0.0,
+        "currency": "EUR"
+      },
       "guaranteeType": "Ota",
       "isPreCheckedIn": false,
       "isOpenForCharges": false,
-      "hasCityTax": true
+      "hasCityTax": true,
+      "hasActivePaymentAccount": false,
+      "cancellationTime": "2026-08-25T17:45:10Z"
     }
   ],
-  "count": 3
+  "count": 4
 }

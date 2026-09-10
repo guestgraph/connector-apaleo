@@ -1,5 +1,5 @@
 {
-  "id": "KLMNPQRS-1",
+  "id": "KLMNPQRS-2",
   "bookingId": "KLMNPQRS",
   "status": "Confirmed",
   "property": {
@@ -13,15 +13,15 @@
     "name": "Standard"
   },
   "unitGroup": {
-    "id": "BER-DBL",
-    "code": "DBL",
-    "name": "Double"
+    "id": "BER-SGL",
+    "code": "SGL",
+    "name": "Single"
   },
-  "arrival": "2026-08-01T15:00:00+02:00",
-  "departure": "2026-08-04T11:00:00+02:00",
+  "arrival": "2026-08-03T15:00:00+02:00",
+  "departure": "2026-08-06T11:00:00+02:00",
   "created": "2026-07-02T10:00:00Z",
   "modified": "2026-07-10T08:15:00Z",
-  "adults": 3,
+  "adults": 1,
   "childrenAges": [],
   "channelCode": "ChannelManager",
   "source": "Agency",
@@ -48,21 +48,7 @@
       "taxId": "CHE-111.222.333"
     }
   },
-  "additionalGuests": [
-    {
-      "firstName": "Felix",
-      "lastName": "Keller",
-      "birthDate": "1978-02-02",
-      "relationshipToPrimaryGuest": "Spouse"
-    },
-    {
-      "firstName": "Greta",
-      "lastName": "Keller",
-      "email": "greta@example.com",
-      "identificationType": "IdNumber",
-      "relationshipToPrimaryGuest": "Child"
-    }
-  ],
+  "additionalGuests": [],
   "totalGrossAmount": {
     "amount": 300.0,
     "currency": "EUR"
@@ -95,18 +81,18 @@
   },
   "timeSlices": [
     {
-      "from": "2026-08-01T15:00:00+02:00",
-      "to": "2026-08-04T11:00:00+02:00",
-      "serviceDate": "2026-08-01",
+      "from": "2026-08-03T15:00:00+02:00",
+      "to": "2026-08-06T11:00:00+02:00",
+      "serviceDate": "2026-08-03",
       "ratePlan": {
         "id": "BER-STD",
         "code": "STD",
         "name": "Standard"
       },
       "unitGroup": {
-        "id": "BER-DBL",
-        "code": "DBL",
-        "name": "Double"
+        "id": "BER-SGL",
+        "code": "SGL",
+        "name": "Single"
       },
       "baseAmount": {
         "grossAmount": 150.0,
@@ -159,16 +145,5 @@
         }
       ]
     }
-  ],
-  "externalCode": "OTA-778812",
-  "externalReferences": {
-    "onlineTravelAgencyId": "OTA-778812"
-  },
-  "company": {
-    "id": "WEBER",
-    "code": "WEBER",
-    "name": "Weber Reisen GmbH",
-    "canCheckOutOnAr": false
-  },
-  "corporateCode": "WEBER"
+  ]
 }

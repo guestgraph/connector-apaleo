@@ -18,9 +18,25 @@
       "departure": "2026-09-12T11:00:00+02:00",
       "adults": 1,
       "childrenAges": [],
-      "property": { "id": "BER", "code": "BER", "name": "Berlin" },
-      "ratePlan": { "id": "BER-STD", "code": "STD", "name": "Standard" },
-      "unitGroup": { "id": "BER-SGL", "code": "SGL", "name": "Single" },
+      "totalGrossAmount": {
+        "amount": 300.0,
+        "currency": "EUR"
+      },
+      "property": {
+        "id": "BER",
+        "code": "BER",
+        "name": "Berlin"
+      },
+      "ratePlan": {
+        "id": "BER-STD",
+        "code": "STD",
+        "name": "Standard"
+      },
+      "unitGroup": {
+        "id": "BER-SGL",
+        "code": "SGL",
+        "name": "Single"
+      },
       "hasActivePaymentAccount": false,
       "isPreCheckedIn": false,
       "isOpenForCharges": false
