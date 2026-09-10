@@ -22,6 +22,7 @@ public record ConnectorProperties(
     String engineSourceSystem,
     Apaleo apaleo,
     Reconcile reconcile,
+    Events events,
     Duration resyncAfterGap,
     String refreshCron,
     Boolean syncOnBoot) {
@@ -36,6 +37,8 @@ public record ConnectorProperties(
 
   public record Reconcile(Duration interval, Duration overlap) {}
 
+  public record Events(Duration pollInterval) {}
+
   @Override
   public String toString() {
     return "ConnectorProperties[publicUrl="
@@ -48,6 +51,8 @@ public record ConnectorProperties(
         + apaleo
         + ", reconcile="
         + reconcile
+        + ", events="
+        + events
         + ", resyncAfterGap="
         + resyncAfterGap
         + ", refreshCron="

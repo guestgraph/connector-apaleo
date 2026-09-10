@@ -117,6 +117,9 @@ public abstract class ConnectorIntegrationTest {
     registry.add("connector.public-url", () -> "https://connector.example");
     registry.add("connector.ops-token", () -> OPS_TOKEN);
     registry.add("connector.sync-on-boot", () -> "false");
+    // The scheduled runs never fire in tests; a test drains and reconciles by hand.
+    registry.add("connector.events.poll-interval", () -> "PT1H");
+    registry.add("connector.reconcile.interval", () -> "PT1H");
     registry.add("connector.connections-file", () -> CONNECTIONS_FILE.toString());
     registry.add("connector.apaleo.identity-url", APALEO::baseUrl);
     registry.add("connector.apaleo.api-url", APALEO::baseUrl);
@@ -177,10 +180,12 @@ public abstract class ConnectorIntegrationTest {
     }
     ENGINE.stubFor(
         post(urlPathEqualTo("/api/v1/source-systems")).willReturn(aResponse().withStatus(201)));
-    APALEO.stubFor(get(urlPathEqualTo("/v1/subscriptions")).willReturn(json("[]")));
-    APALEO.stubFor(
-        post(urlPathEqualTo("/v1/subscriptions"))
-            .willReturn(json("{\"id\":\"sub-1\"}").withStatus(201)));
+    for (Connection c : CONNECTIONS) {
+      stubSubscriptions(c, "[]");
+      APALEO.stubFor(
+          asConnection(post(urlPathEqualTo("/v1/subscriptions")), c)
+              .willReturn(json("{\"id\":\"sub-" + c.name() + "\"}").withStatus(201)));
+    }
   }
 
   // --- Apaleo stubs, per connection -----------------------------------------------------
@@ -197,17 +202,49 @@ public abstract class ConnectorIntegrationTest {
   }
 
   protected static void stubReservation(Connection c, String id, String documentName) {
+    stubReservationBody(c, id, document(documentName));
+  }
+
+  /** A reservation as a body, for a version a test alters from a recorded document. */
+  protected static void stubReservationBody(Connection c, String id, String body) {
     APALEO.stubFor(
         asConnection(get(urlPathEqualTo("/booking/v1/reservations/" + id)), c)
-            .willReturn(json(document(documentName))));
+            .willReturn(json(body)));
+  }
+
+  protected static void stubReservationFailure(Connection c, String id, int status) {
+    APALEO.stubFor(
+        asConnection(get(urlPathEqualTo("/booking/v1/reservations/" + id)), c)
+            .willReturn(aResponse().withStatus(status)));
+  }
+
+  /** What Apaleo lists for the connection's subscriptions; the harness baseline lists none. */
+  protected static void stubSubscriptions(Connection c, String jsonArray) {
+    APALEO.stubFor(
+        asConnection(get(urlPathEqualTo("/v1/subscriptions")), c).willReturn(json(jsonArray)));
+  }
+
+  protected static void stubSubscriptionsFailure(Connection c, int status) {
+    APALEO.stubFor(
+        asConnection(get(urlPathEqualTo("/v1/subscriptions")), c)
+            .willReturn(aResponse().withStatus(status)));
+  }
+
+  /** The endpoint a connection's subscription must name. */
+  protected static String endpointOf(Connection c) {
+    return "https://connector.example/apaleo/events/" + c.webhookSecret();
   }
 
   /** Bookings are read with their reservations expanded; a fetch without asking is not served. */
   protected static void stubBooking(Connection c, String id, String documentName) {
+    stubBookingBody(c, id, document(documentName));
+  }
+
+  protected static void stubBookingBody(Connection c, String id, String body) {
     APALEO.stubFor(
         asConnection(get(urlPathEqualTo("/booking/v1/bookings/" + id)), c)
             .withQueryParam("expand", equalTo("reservations"))
-            .willReturn(json(document(documentName))));
+            .willReturn(json(body)));
   }
 
   /** Pages answer in order; the page after the last is Apaleo's 204 No Content. */
@@ -219,9 +256,26 @@ public abstract class ConnectorIntegrationTest {
     stubPages(c, "/booking/v1/bookings", documentNames, true);
   }
 
+  protected static void stubReservationPagesBody(Connection c, List<String> bodies) {
+    stubPagesBody(c, "/booking/v1/reservations", bodies, false);
+  }
+
+  protected static void stubBookingPagesBody(Connection c, List<String> bodies) {
+    stubPagesBody(c, "/booking/v1/bookings", bodies, true);
+  }
+
   private static void stubPages(
       Connection c, String path, List<String> documentNames, boolean expandReservations) {
-    for (int i = 0; i <= documentNames.size(); i++) {
+    stubPagesBody(
+        c,
+        path,
+        documentNames.stream().map(ConnectorIntegrationTest::document).toList(),
+        expandReservations);
+  }
+
+  private static void stubPagesBody(
+      Connection c, String path, List<String> bodies, boolean expandReservations) {
+    for (int i = 0; i <= bodies.size(); i++) {
       MappingBuilder page =
           asConnection(get(urlPathEqualTo(path)), c)
               .withQueryParam("pageNumber", equalTo(String.valueOf(i + 1)));
@@ -229,10 +283,7 @@ public abstract class ConnectorIntegrationTest {
         page = page.withQueryParam("expand", equalTo("reservations"));
       }
       APALEO.stubFor(
-          page.willReturn(
-              i < documentNames.size()
-                  ? json(document(documentNames.get(i)))
-                  : aResponse().withStatus(204)));
+          page.willReturn(i < bodies.size() ? json(bodies.get(i)) : aResponse().withStatus(204)));
     }
   }
 

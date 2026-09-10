@@ -97,17 +97,7 @@ public class FullSync {
   }
 
   private UUID begin(ConnectionConfig c) {
-    return transactions.execute(
-        status -> {
-          boolean running =
-              syncRuns.findRunning(c.name()).stream().anyMatch(r -> KIND.equals(r.getKind()));
-          if (running) {
-            throw new RunInProgressException(c.name(), KIND);
-          }
-          UUID runId = UUID.randomUUID();
-          syncRuns.start(c.name(), runId, KIND, clock.instant());
-          return runId;
-        });
+    return RunStart.begin(c, KIND, connections, syncRuns, transactions, clock);
   }
 
   private void execute(ConnectionConfig c, UUID runId) {
@@ -171,7 +161,9 @@ public class FullSync {
         }
       }
       // SUCCEEDED means everything landed; a run with refused records says so and is retried
-      // by the reconciliation, which reads from the sync points that did not advance.
+      // by the reconciliation, which reads from the sync points that did not advance. Either way
+      // the walk completed, which is the activity the gap rule asks about: it is about
+      // deliveries Apaleo gave up on, not records the engine refused.
       String outcome = errors == 0 ? "SUCCEEDED" : "FAILED";
       String reason = errors == 0 ? null : errors + " records refused by the engine";
       transactions.executeWithoutResult(

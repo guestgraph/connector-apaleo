@@ -45,6 +45,9 @@ connector:
   reconcile:
     interval: ${RECONCILE_INTERVAL:PT15M}
     overlap: ${RECONCILE_OVERLAP:PT1H}
+  events:
+    # How often stored deliveries are drained: a change reaches the engine within this and one fetch.
+    poll-interval: ${EVENT_POLL_INTERVAL:PT10S}
   apaleo:
     # The three hosts a connection's client talks to; tests point them at a stub.
     identity-url: https://identity.apaleo.com
