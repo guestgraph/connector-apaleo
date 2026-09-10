@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: connector-apaleo
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  datasource:
+    # One schema, one role (data-model "One schema, one role"): the connector touches nothing
+    # outside DATABASE_SCHEMA, whether the database is the engine's or its own.
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/connector}?currentSchema=${DATABASE_SCHEMA:apaleo_connector}
+    username: ${DATABASE_USERNAME:apaleo_connector}
+    password: ${DATABASE_PASSWORD:apaleo_connector}
+  flyway:
+    enabled: true
+    default-schema: ${DATABASE_SCHEMA:apaleo_connector}
+    create-schemas: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  docker:
+    compose:
+      lifecycle-management: start_only
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
