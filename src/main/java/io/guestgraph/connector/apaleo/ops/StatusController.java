@@ -19,6 +19,7 @@ import io.guestgraph.connector.apaleo.persistence.repo.SyncPointRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.SyncRunRepo;
 import io.guestgraph.connector.apaleo.sync.FullSync;
 import io.guestgraph.connector.apaleo.sync.Reconciliation;
+import io.guestgraph.connector.apaleo.sync.Refresh;
 import io.guestgraph.connector.apaleo.sync.RunInProgressException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +37,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * The operations surface of research R9: the status, one document for every configured connection,
- * and the runs an operator starts and reads. Behind {@link OpsTokenFilter}. The refresh of user
- * story 4 is not served yet.
+ * and the runs an operator starts and reads. Behind {@link OpsTokenFilter}.
  */
 @RestController
 public class StatusController {
@@ -52,6 +52,7 @@ public class StatusController {
   private final LastErrors lastErrors;
   private final FullSync fullSync;
   private final Reconciliation reconciliation;
+  private final Refresh refresh;
 
   public StatusController(
       Connections connections,
@@ -63,7 +64,8 @@ public class StatusController {
       Subscriptions subscriptions,
       LastErrors lastErrors,
       FullSync fullSync,
-      Reconciliation reconciliation) {
+      Reconciliation reconciliation,
+      Refresh refresh) {
     this.connections = connections;
     this.connectionRows = connectionRows;
     this.syncPoints = syncPoints;
@@ -74,6 +76,7 @@ public class StatusController {
     this.lastErrors = lastErrors;
     this.fullSync = fullSync;
     this.reconciliation = reconciliation;
+    this.refresh = refresh;
   }
 
   @GetMapping("/status")
@@ -94,6 +97,11 @@ public class StatusController {
   @PostMapping("/connections/{connectionId}/sync/reconcile")
   public ResponseEntity<RunStarted> startReconciliation(@PathVariable String connectionId) {
     return started(reconciliation.start(connection(connectionId)));
+  }
+
+  @PostMapping("/connections/{connectionId}/refresh")
+  public ResponseEntity<RunStarted> startRefresh(@PathVariable String connectionId) {
+    return started(refresh.start(connection(connectionId)));
   }
 
   @GetMapping("/connections/{connectionId}/runs/{runId}")
@@ -172,7 +180,9 @@ public class StatusController {
                 row.getErrors()),
         events.countPending(c.name()),
         heldGuestIds.countAwaitingPerson(c.name()),
-        syncRuns.lastSucceeded(c.name(), "REFRESH").map(SyncRunEntity::getFinishedAt).orElse(null),
+        // When the ids were last read, whether or not one of them could not be: the run's
+        // outcome and its errors say that.
+        syncRuns.lastFinished(c.name(), "REFRESH").map(SyncRunEntity::getFinishedAt).orElse(null),
         lastErrors.find(c.name()).orElse(null));
   }
 }

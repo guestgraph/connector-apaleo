@@ -40,6 +40,13 @@ public interface SyncRunRepo extends Repository<SyncRunEntity, UUID> {
   Optional<SyncRunEntity> lastSucceeded(
       @Param("connectionId") String connectionId, @Param("kind") String kind);
 
+  /** The last run of the kind that ended, whatever its outcome: when the walk last happened. */
+  @Query(
+      "select r from SyncRunEntity r where r.connectionId = :connectionId and r.kind = :kind"
+          + " and r.finishedAt is not null order by r.finishedAt desc limit 1")
+  Optional<SyncRunEntity> lastFinished(
+      @Param("connectionId") String connectionId, @Param("kind") String kind);
+
   /** Counters accumulate as a run proceeds, so the status can show progress. */
   @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(
