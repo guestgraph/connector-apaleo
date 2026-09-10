@@ -26,6 +26,11 @@ public class ConnectionEntity {
   private String webhookSecretHash;
   private Instant createdAt;
   private Instant lastActivityAt;
+  private long versionsSubmitted;
+  private long recordsSubmitted;
+  private long duplicates;
+  private long flaggedForReview;
+  private long errors;
 
   protected ConnectionEntity() {}
 
@@ -72,5 +77,25 @@ public class ConnectionEntity {
 
   public Instant getLastActivityAt() {
     return lastActivityAt;
+  }
+
+  public long getVersionsSubmitted() {
+    return versionsSubmitted;
+  }
+
+  public long getRecordsSubmitted() {
+    return recordsSubmitted;
+  }
+
+  public long getDuplicates() {
+    return duplicates;
+  }
+
+  public long getFlaggedForReview() {
+    return flaggedForReview;
+  }
+
+  public long getErrors() {
+    return errors;
   }
 }

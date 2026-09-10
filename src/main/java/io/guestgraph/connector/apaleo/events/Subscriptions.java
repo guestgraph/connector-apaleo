@@ -5,11 +5,13 @@ import io.guestgraph.connector.apaleo.apaleo.ApaleoWebhooks;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
 import io.guestgraph.connector.apaleo.config.ConnectorProperties;
+import io.guestgraph.connector.apaleo.ops.LastErrors;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
@@ -30,19 +32,26 @@ public class Subscriptions {
   private static final Logger log = LoggerFactory.getLogger(Subscriptions.class);
 
   /** As last seen; {@code reason} carries why it is not active, never a payload. */
-  public record Status(boolean active, List<String> eventTypes, Instant checkedAt, String reason) {}
+  public record Status(
+      boolean active, String id, List<String> eventTypes, Instant checkedAt, String reason) {}
 
   private final Connections connections;
   private final ApaleoClients apaleo;
   private final ConnectorProperties properties;
+  private final LastErrors lastErrors;
   private final Clock clock;
   private final Map<String, Status> statuses = new ConcurrentHashMap<>();
 
   public Subscriptions(
-      Connections connections, ApaleoClients apaleo, ConnectorProperties properties, Clock clock) {
+      Connections connections,
+      ApaleoClients apaleo,
+      ConnectorProperties properties,
+      LastErrors lastErrors,
+      Clock clock) {
     this.connections = connections;
     this.apaleo = apaleo;
     this.properties = properties;
+    this.lastErrors = lastErrors;
     this.clock = clock;
   }
 
@@ -77,10 +86,11 @@ public class Subscriptions {
                   c.apaleoPropertyIds(),
                   url -> url != null && url.startsWith(prefix) && !others.contains(url));
       log.info("Connection {}: subscription {} in place", c.name(), subscription.id());
-      return record(c, new Status(true, events, clock.instant(), null));
+      return record(c, new Status(true, subscription.id(), events, clock.instant(), null));
     } catch (RuntimeException e) {
       log.error("Connection {}: subscription could not be made: {}", c.name(), e.getMessage());
-      return record(c, new Status(false, events, clock.instant(), e.getMessage()));
+      lastErrors.record(c.name(), e, LastErrors.Where.APALEO);
+      return record(c, new Status(false, null, events, clock.instant(), e.getMessage()));
     }
   }
 
@@ -88,21 +98,23 @@ public class Subscriptions {
   public Status check(ConnectionConfig c) {
     List<String> events = properties.apaleo().eventTypes();
     try {
-      boolean exists = apaleo.webhooksFor(c).exists(endpointOf(c));
-      if (!exists) {
+      Optional<ApaleoWebhooks.Subscription> found = apaleo.webhooksFor(c).find(endpointOf(c));
+      if (found.isEmpty()) {
         log.warn("Connection {}: no subscription names this connector", c.name());
+        return record(c, new Status(false, null, events, clock.instant(), "no subscription found"));
       }
-      return record(
-          c, new Status(exists, events, clock.instant(), exists ? null : "no subscription found"));
+      return record(c, new Status(true, found.get().id(), events, clock.instant(), null));
     } catch (RuntimeException e) {
       log.warn("Connection {}: subscription could not be read: {}", c.name(), e.getMessage());
-      return record(c, new Status(false, events, clock.instant(), e.getMessage()));
+      lastErrors.record(c.name(), e, LastErrors.Where.APALEO);
+      return record(c, new Status(false, null, events, clock.instant(), e.getMessage()));
     }
   }
 
   public Status status(ConnectionConfig c) {
     return statuses.getOrDefault(
-        c.name(), new Status(false, properties.apaleo().eventTypes(), null, "not checked yet"));
+        c.name(),
+        new Status(false, null, properties.apaleo().eventTypes(), null, "not checked yet"));
   }
 
   /** The URL Apaleo posts to: the public URL, the fixed path and the connection's secret. */

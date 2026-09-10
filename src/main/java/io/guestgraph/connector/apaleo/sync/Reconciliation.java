@@ -8,6 +8,7 @@ import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
 import io.guestgraph.connector.apaleo.config.ConnectorProperties;
 import io.guestgraph.connector.apaleo.events.Subscriptions;
+import io.guestgraph.connector.apaleo.ops.LastErrors;
 import io.guestgraph.connector.apaleo.persistence.ObjectType;
 import io.guestgraph.connector.apaleo.persistence.entity.SyncPointEntity;
 import io.guestgraph.connector.apaleo.persistence.repo.ConnectionRepo;
@@ -23,6 +24,8 @@ import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -50,6 +53,8 @@ public class Reconciliation {
   private final GapGuard gapGuard;
   private final FullSync fullSync;
   private final TransactionTemplate transactions;
+  private final TaskExecutor executor;
+  private final LastErrors lastErrors;
   private final Duration overlap;
   private final Clock clock;
 
@@ -64,6 +69,8 @@ public class Reconciliation {
       GapGuard gapGuard,
       FullSync fullSync,
       TransactionTemplate transactions,
+      @Qualifier("applicationTaskExecutor") TaskExecutor executor,
+      LastErrors lastErrors,
       ConnectorProperties properties,
       Clock clock) {
     this.configured = configured;
@@ -76,6 +83,8 @@ public class Reconciliation {
     this.gapGuard = gapGuard;
     this.fullSync = fullSync;
     this.transactions = transactions;
+    this.executor = executor;
+    this.lastErrors = lastErrors;
     this.overlap = properties.reconcile().overlap();
     this.clock = clock;
   }
@@ -100,15 +109,32 @@ public class Reconciliation {
    * gap rule asks for instead. Refused while any run is in progress, since both walk the same list.
    */
   public UUID run(ConnectionConfig c) {
-    if (gapGuard.gapExceeded(c)) {
-      log.warn(
-          "Connection {}: no activity for longer than Apaleo's retry window, running a full sync",
-          c.name());
+    if (gapExceeded(c)) {
       return fullSync.run(c);
     }
     UUID runId = RunStart.begin(c, KIND, connections, syncRuns, transactions, clock);
     execute(c, runId);
     return runId;
+  }
+
+  /** Starts in the background and answers the run id; refused while any run is in progress. */
+  public UUID start(ConnectionConfig c) {
+    if (gapExceeded(c)) {
+      return fullSync.start(c);
+    }
+    UUID runId = RunStart.begin(c, KIND, connections, syncRuns, transactions, clock);
+    executor.execute(() -> execute(c, runId));
+    return runId;
+  }
+
+  private boolean gapExceeded(ConnectionConfig c) {
+    boolean exceeded = gapGuard.gapExceeded(c);
+    if (exceeded) {
+      log.warn(
+          "Connection {}: no activity for longer than Apaleo's retry window, running a full sync",
+          c.name());
+    }
+    return exceeded;
   }
 
   /** The configured properties; with none configured, every property a full sync has seen. */
@@ -179,6 +205,9 @@ public class Reconciliation {
       // delivery Apaleo gave up on.
       String outcome = errors == 0 ? "SUCCEEDED" : "FAILED";
       String reason = errors == 0 ? null : errors + " records refused by the engine";
+      if (errors > 0) {
+        lastErrors.record(c.name(), LastErrors.Where.ENGINE, reason);
+      }
       transactions.executeWithoutResult(
           status -> {
             connections.touchActivity(c.name(), clock.instant());
@@ -186,6 +215,7 @@ public class Reconciliation {
           });
     } catch (RuntimeException e) {
       log.error("Reconciliation {} on connection {} failed: {}", runId, c.name(), e.getMessage());
+      lastErrors.record(c.name(), e, LastErrors.Where.APALEO);
       transactions.executeWithoutResult(
           status -> syncRuns.finish(c.name(), runId, clock.instant(), "FAILED", e.getMessage()));
     } catch (Error e) {

@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -41,58 +42,70 @@ public class EngineClient {
 
   /** Registers the source system; a conflict means it exists, which is the same outcome. */
   public void registerSourceSystem(String code, String name) {
-    ResponseEntity<Void> response =
-        engine
-            .post()
-            .uri("/api/v1/source-systems")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(JSON.writeValueAsString(Map.of("code", code, "name", name)))
-            .retrieve()
-            .toBodilessEntity();
-    int status = response.getStatusCode().value();
-    if (status != HttpStatus.CREATED.value() && status != HttpStatus.CONFLICT.value()) {
-      throw new EngineException("register source system", status);
+    try {
+      ResponseEntity<Void> response =
+          engine
+              .post()
+              .uri("/api/v1/source-systems")
+              .contentType(MediaType.APPLICATION_JSON)
+              .body(JSON.writeValueAsString(Map.of("code", code, "name", name)))
+              .retrieve()
+              .toBodilessEntity();
+      int status = response.getStatusCode().value();
+      if (status != HttpStatus.CREATED.value() && status != HttpStatus.CONFLICT.value()) {
+        throw new EngineException("register source system", status);
+      }
+    } catch (RestClientException e) {
+      throw new EngineException("register source system", e);
     }
   }
 
   public List<IngestResult> submit(List<IngestRecord> records) {
-    if (records.size() > BATCH) {
-      throw new IllegalArgumentException("A batch carries at most " + BATCH + " records");
+    try {
+      if (records.size() > BATCH) {
+        throw new IllegalArgumentException("A batch carries at most " + BATCH + " records");
+      }
+      ResponseEntity<String> response =
+          engine
+              .post()
+              .uri("/api/v1/records")
+              .contentType(MediaType.APPLICATION_JSON)
+              .body(JSON.writeValueAsString(records))
+              .retrieve()
+              .toEntity(String.class);
+      if (response.getStatusCode().isError() || response.getBody() == null) {
+        throw new EngineException("submit records", response.getStatusCode().value());
+      }
+      List<IngestResult> results = new ArrayList<>();
+      for (Object item : list(parse(response.getBody()).get("results"))) {
+        results.add(result((Map<?, ?>) item));
+      }
+      return results;
+    } catch (RestClientException e) {
+      throw new EngineException("submit records", e);
     }
-    ResponseEntity<String> response =
-        engine
-            .post()
-            .uri("/api/v1/records")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(JSON.writeValueAsString(records))
-            .retrieve()
-            .toEntity(String.class);
-    if (response.getStatusCode().isError() || response.getBody() == null) {
-      throw new EngineException("submit records", response.getStatusCode().value());
-    }
-    List<IngestResult> results = new ArrayList<>();
-    for (Object item : list(parse(response.getBody()).get("results"))) {
-      results.add(result((Map<?, ?>) item));
-    }
-    return results;
   }
 
   /** Empty when the id never existed in the tenant; the engine's 404. */
   public Optional<GuestResolution> getGuest(UUID guestId) {
-    ResponseEntity<String> response =
-        engine.get().uri("/api/v1/guests/" + guestId).retrieve().toEntity(String.class);
-    if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
-      return Optional.empty();
+    try {
+      ResponseEntity<String> response =
+          engine.get().uri("/api/v1/guests/" + guestId).retrieve().toEntity(String.class);
+      if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+        return Optional.empty();
+      }
+      if (response.getStatusCode().isError() || response.getBody() == null) {
+        throw new EngineException("read guest " + guestId, response.getStatusCode().value());
+      }
+      Map<String, Object> body = parse(response.getBody());
+      List<UUID> current = new ArrayList<>();
+      for (Object id : list(body.get("currentGuestIds"))) {
+        current.add(UUID.fromString(String.valueOf(id)));
+      }
+      return Optional.of(new GuestResolution(String.valueOf(body.get("status")), current));
+    } catch (RestClientException e) {
+      throw new EngineException("read guest", e);
     }
-    if (response.getStatusCode().isError() || response.getBody() == null) {
-      throw new EngineException("read guest " + guestId, response.getStatusCode().value());
-    }
-    Map<String, Object> body = parse(response.getBody());
-    List<UUID> current = new ArrayList<>();
-    for (Object id : list(body.get("currentGuestIds"))) {
-      current.add(UUID.fromString(String.valueOf(id)));
-    }
-    return Optional.of(new GuestResolution(String.valueOf(body.get("status")), current));
   }
 
   @SuppressWarnings("unchecked")

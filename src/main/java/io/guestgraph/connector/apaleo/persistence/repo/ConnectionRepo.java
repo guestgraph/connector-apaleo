@@ -45,6 +45,22 @@ public interface ConnectionRepo extends Repository<ConnectionEntity, String> {
       @Param("secretHash") String secretHash,
       @Param("now") Instant now);
 
+  /** The status counters accumulate over every submission, in a run or from an event. */
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query(
+      "update ConnectionEntity c set c.versionsSubmitted = c.versionsSubmitted + :versions,"
+          + " c.recordsSubmitted = c.recordsSubmitted + :records,"
+          + " c.duplicates = c.duplicates + :duplicates,"
+          + " c.flaggedForReview = c.flaggedForReview + :flagged,"
+          + " c.errors = c.errors + :errors where c.id = :connectionId")
+  int count(
+      @Param("connectionId") String connectionId,
+      @Param("versions") int versions,
+      @Param("records") int records,
+      @Param("duplicates") int duplicates,
+      @Param("flagged") int flagged,
+      @Param("errors") int errors);
+
   /** The row, locked until the transaction ends: one run at a time starts on a connection. */
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select c from ConnectionEntity c where c.id = :connectionId")

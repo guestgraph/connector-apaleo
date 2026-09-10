@@ -6,12 +6,14 @@ import io.guestgraph.connector.apaleo.apaleo.model.Reservation;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
 import io.guestgraph.connector.apaleo.config.ConnectorProperties;
+import io.guestgraph.connector.apaleo.ops.LastErrors;
 import io.guestgraph.connector.apaleo.persistence.ObjectType;
 import io.guestgraph.connector.apaleo.persistence.entity.ProcessedEventEntity;
 import io.guestgraph.connector.apaleo.persistence.repo.ConnectionRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.ProcessedEventRepo;
 import io.guestgraph.connector.apaleo.sync.ObjectSubmitter;
 import io.guestgraph.connector.apaleo.sync.Outcome;
+import io.guestgraph.connector.apaleo.sync.RecordsRefusedException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -41,6 +43,7 @@ public class EventWorker {
   private final ApaleoClients apaleo;
   private final ObjectSubmitter submitter;
   private final TransactionTemplate transactions;
+  private final LastErrors lastErrors;
   private final Duration resyncAfterGap;
   private final Clock clock;
 
@@ -52,6 +55,7 @@ public class EventWorker {
       ObjectSubmitter submitter,
       TransactionTemplate transactions,
       ConnectorProperties properties,
+      LastErrors lastErrors,
       Clock clock) {
     this.connections = connections;
     this.events = events;
@@ -60,6 +64,7 @@ public class EventWorker {
     this.submitter = submitter;
     this.transactions = transactions;
     this.resyncAfterGap = properties.resyncAfterGap();
+    this.lastErrors = lastErrors;
     this.clock = clock;
   }
 
@@ -94,7 +99,7 @@ public class EventWorker {
     try {
       int errors = submit(c, event);
       if (errors > 0) {
-        throw new IllegalStateException(errors + " records refused by the engine");
+        throw new RecordsRefusedException(errors);
       }
       transactions.executeWithoutResult(
           status -> {
@@ -118,6 +123,8 @@ public class EventWorker {
       transactions.executeWithoutResult(
           status ->
               events.markFailed(c.name(), eventId, clock.instant().plus(wait), e.getMessage()));
+      // Anything untyped happened while fetching.
+      lastErrors.record(c.name(), e, LastErrors.Where.APALEO);
       return false;
     }
   }

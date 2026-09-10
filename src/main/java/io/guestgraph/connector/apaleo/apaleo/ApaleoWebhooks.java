@@ -114,9 +114,13 @@ public class ApaleoWebhooks {
     return new Subscription(current.id(), endpointUrl, events, propertyIds);
   }
 
-  /** Whether a subscription names the endpoint; a listing Apaleo cannot give answers no. */
+  /** The subscription naming the endpoint; a listing Apaleo cannot give holds none. */
+  public Optional<Subscription> find(String endpointUrl) {
+    return list().stream().filter(s -> endpointUrl.equals(s.endpointUrl())).findFirst();
+  }
+
   public boolean exists(String endpointUrl) {
-    return list().stream().anyMatch(s -> endpointUrl.equals(s.endpointUrl()));
+    return find(endpointUrl).isPresent();
   }
 
   @SuppressWarnings("unchecked")

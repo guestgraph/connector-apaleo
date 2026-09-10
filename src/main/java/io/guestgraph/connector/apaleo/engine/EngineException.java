@@ -10,6 +10,12 @@ public class EngineException extends RuntimeException {
     this.status = status;
   }
 
+  /** No answer at all; the cause says why, in the client's words, which name no credential. */
+  public EngineException(String what, Throwable cause) {
+    super(what + ": " + cause.getMessage(), cause);
+    this.status = 0;
+  }
+
   public int status() {
     return status;
   }
