@@ -17,7 +17,7 @@ public class ConnectorConfig {
     return Clock.systemUTC();
   }
 
-  /** Runs write in transactions of their own, one object at a time, not one long transaction. */
+  /** A run writes one transaction per object, never one long transaction across the run. */
   @Bean
   public TransactionTemplate transactionTemplate(PlatformTransactionManager transactionManager) {
     return new TransactionTemplate(transactionManager);

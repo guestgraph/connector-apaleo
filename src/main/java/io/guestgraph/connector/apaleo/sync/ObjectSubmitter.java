@@ -18,11 +18,13 @@ import io.guestgraph.connector.apaleo.persistence.repo.SyncRunRepo;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -107,13 +109,29 @@ public class ObjectSubmitter {
       String modified,
       String status,
       String hash,
-      java.util.function.Supplier<List<IngestRecord>> records) {
+      Supplier<List<IngestRecord>> records) {
     Optional<ObjectStateEntity> state = objectStates.find(c.name(), type.code(), objectId);
     if (state.isPresent() && state.get().getRosterHash().equals(hash)) {
       return Outcome.unchanged();
     }
+    // A version whose clock cannot be read is still sent — the engine flags it (spec US1
+    // scenario 8) — but nothing valid can be stored for it, so the state stays and it counts.
+    Optional<Instant> version = parse(modified);
     List<IngestRecord> batch = records.get();
     if (batch.isEmpty()) {
+      // Nothing to send, but the version is known: a booking without a booker is not refetched.
+      version.ifPresent(
+          at ->
+              objectStates.upsert(
+                  c.name(),
+                  type.code(),
+                  objectId,
+                  propertyId,
+                  bookingId,
+                  at,
+                  hash,
+                  clock.instant(),
+                  status));
       return Outcome.unchanged();
     }
     EngineClient engine = engines.forConnection(c);
@@ -123,7 +141,8 @@ public class ObjectSubmitter {
 
     int duplicates = 0;
     int flagged = 0;
-    int errors = 0;
+    // A result the engine did not answer is an error too: its outcome is unknown.
+    int errors = Math.max(0, batch.size() - results.size());
     for (IngestResult result : results) {
       IngestRecord record = byKey.get(result.externalKey());
       if (result.failed() || record == null) {
@@ -147,6 +166,9 @@ public class ObjectSubmitter {
             result.sourceRecordId());
       }
     }
+    if (version.isEmpty()) {
+      errors++;
+    }
     if (errors > 0) {
       return new Outcome(Outcome.Kind.FAILED, batch.size(), duplicates, flagged, errors);
     }
@@ -156,7 +178,7 @@ public class ObjectSubmitter {
         objectId,
         propertyId,
         bookingId,
-        instant(modified),
+        version.get(),
         hash,
         clock.instant(),
         status);
@@ -178,7 +200,15 @@ public class ObjectSubmitter {
         outcome.errors());
   }
 
-  static Instant instant(String dateTime) {
-    return OffsetDateTime.parse(dateTime).toInstant();
+  /** Empty when Apaleo's instant is absent or not an instant; never guessed at. */
+  static Optional<Instant> parse(String dateTime) {
+    if (dateTime == null) {
+      return Optional.empty();
+    }
+    try {
+      return Optional.of(OffsetDateTime.parse(dateTime).toInstant());
+    } catch (DateTimeParseException e) {
+      return Optional.empty();
+    }
   }
 }

@@ -3,8 +3,10 @@ package io.guestgraph.connector.apaleo.integration;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import io.guestgraph.connector.apaleo.apaleo.model.Reservation;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
 import io.guestgraph.connector.apaleo.persistence.ObjectType;
@@ -14,9 +16,15 @@ import io.guestgraph.connector.apaleo.persistence.repo.ObjectStateRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.SyncPointRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.SyncRunRepo;
 import io.guestgraph.connector.apaleo.sync.FullSync;
+import io.guestgraph.connector.apaleo.sync.ObjectSubmitter;
+import io.guestgraph.connector.apaleo.sync.Outcome;
+import io.guestgraph.connector.apaleo.sync.RunInProgressException;
+import io.guestgraph.connector.apaleo.testing.Recorded;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +39,7 @@ class FullSyncTest extends ConnectorIntegrationTest {
   private static final ObjectMapper JSON = new ObjectMapper();
 
   @Autowired FullSync fullSync;
+  @Autowired ObjectSubmitter submitter;
   @Autowired Connections connections;
   @Autowired ObjectStateRepo objectStates;
   @Autowired HeldGuestIdRepo heldGuestIds;
@@ -63,7 +72,7 @@ class FullSyncTest extends ConnectorIntegrationTest {
             "KLMNPQRS:booker:2026-07-10T08:15:00Z",
             "QRTLMNOP:booker:2026-08-20T08:00:00Z",
             "EMPTYBKG:booker:2026-09-01T12:00:00Z");
-    // One object's persons never split across batches.
+    // One object's persons never split across batches; today one object is one batch.
     for (LoggedRequest batch : batches) {
       List<String> objects =
           keysOf(batch).stream().map(k -> k.substring(0, k.indexOf(':'))).distinct().toList();
@@ -76,10 +85,8 @@ class FullSyncTest extends ConnectorIntegrationTest {
                 .count();
         assertThat(elsewhere).as("%s in one batch only", object).isZero();
       }
-    }
-    // Every submitted batch went to alpha's key.
-    for (LoggedRequest batch : batches) {
       assertThat(batch.getHeader("X-API-Key")).isEqualTo(ALPHA.engineKey());
+      assertThat(batch.getBodyAsString()).doesNotContain("\"position\":null");
     }
 
     assertThat(objectStates.find(ALPHA.name(), ObjectType.RESERVATION.code(), "KLMNPQRS-1"))
@@ -138,6 +145,9 @@ class FullSyncTest extends ConnectorIntegrationTest {
                 .orElseThrow()
                 .getLastSubmittedAt())
         .isEqualTo(submittedBefore);
+    assertThat(heldGuestIds.distinctGuestIds(ALPHA.name())).hasSize(11);
+    assertThat(syncPoints.find(ALPHA.name(), "BER").orElseThrow().getModifiedThrough())
+        .isEqualTo(Instant.parse("2026-08-25T17:45:10Z"));
     SyncRunEntity run = syncRuns.find(ALPHA.name(), second).orElseThrow();
     assertThat(run.getVersionsSubmitted()).isZero();
     assertThat(run.getReservationsSeen()).isEqualTo(4);
@@ -159,6 +169,52 @@ class FullSyncTest extends ConnectorIntegrationTest {
     SyncRunEntity run = syncRuns.find(ALPHA.name(), runId).orElseThrow();
     assertThat(run.getErrors()).isEqualTo(1);
     assertThat(run.getVersionsSubmitted()).isEqualTo(7);
+    // SUCCEEDED means everything landed; this run says otherwise, and the property's point stays
+    // behind the refused version so the reconciliation reads it and everything after it again.
+    assertThat(run.getOutcome()).isEqualTo("FAILED");
+    assertThat(run.getLastError()).contains("1 records refused");
+    assertThat(syncPoints.find(ALPHA.name(), "BER").orElseThrow().getModifiedThrough())
+        .isEqualTo(Instant.parse("2026-07-09T14:30:00Z"));
+  }
+
+  @Test
+  @DisplayName("a run left open by a stopped process is closed at start and blocks nothing")
+  void interruptedRunIsRecovered() {
+    clean();
+    stubAccount(ALPHA);
+    ConnectionConfig alpha = connections.byName(ALPHA.name()).orElseThrow();
+    jdbc.sql(
+            "INSERT INTO sync_run (id, connection_id, kind, started_at)"
+                + " VALUES (:id, :c, 'FULL', now())")
+        .param("id", UUID.randomUUID())
+        .param("c", ALPHA.name())
+        .update();
+
+    assertThatThrownBy(() -> fullSync.run(alpha)).isInstanceOf(RunInProgressException.class);
+
+    assertThat(fullSync.recover(alpha)).isEqualTo(1);
+    UUID runId = fullSync.run(alpha);
+    assertThat(syncRuns.find(ALPHA.name(), runId).orElseThrow().getOutcome())
+        .isEqualTo("SUCCEEDED");
+  }
+
+  @Test
+  @DisplayName("a version whose clock cannot be read is still sent, counted, and not stored")
+  @SuppressWarnings("unchecked")
+  void unreadableVersionIsSentNotStored() {
+    clean();
+    ConnectionConfig alpha = connections.byName(ALPHA.name()).orElseThrow();
+    Map<String, Object> raw =
+        new LinkedHashMap<>(
+            JSON.readValue(Recorded.document("reservation-second.json"), Map.class));
+    raw.put("modified", "yesterday");
+
+    Outcome outcome = submitter.submit(alpha, null, new Reservation(raw));
+
+    assertThat(outcome.kind()).isEqualTo(Outcome.Kind.FAILED);
+    assertThat(outcome.errors()).isEqualTo(1);
+    assertThat(ENGINE.findAll(postRequestedFor(urlPathEqualTo("/api/v1/records")))).hasSize(1);
+    assertThat(objectStates.find(ALPHA.name(), "reservation", "KLMNPQRS-2")).isEmpty();
   }
 
   private void stubAccount(Connection c) {

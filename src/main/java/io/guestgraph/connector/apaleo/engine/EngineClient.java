@@ -1,5 +1,6 @@
 package io.guestgraph.connector.apaleo.engine;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.guestgraph.connector.apaleo.engine.model.GuestResolution;
 import io.guestgraph.connector.apaleo.engine.model.IngestRecord;
 import io.guestgraph.connector.apaleo.engine.model.IngestResult;
@@ -13,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * One connection's calls to the engine (research R7, R8): the source system registered once, a
@@ -24,7 +26,12 @@ public class EngineClient {
   /** The most records one submission carries; a caller never splits one object across two. */
   public static final int BATCH = 100;
 
-  private static final ObjectMapper JSON = new ObjectMapper();
+  /** Absent rather than null, as the contract's example writes a missing position or date. */
+  private static final ObjectMapper JSON =
+      JsonMapper.builder()
+          .changeDefaultPropertyInclusion(
+              inclusion -> inclusion.withValueInclusion(JsonInclude.Include.NON_NULL))
+          .build();
 
   private final RestClient engine;
 

@@ -69,8 +69,10 @@ public final class RosterHash {
         .append('\n');
   }
 
+  /** Length-prefixed, so a separator inside a value cannot make two rosters read as one. */
   private static String trim(String value) {
-    return value == null ? "" : value.trim();
+    String trimmed = value == null ? "" : value.trim();
+    return trimmed.length() + ":" + trimmed;
   }
 
   private static String sha256(String value) {
