@@ -1,6 +1,7 @@
 package io.guestgraph.connector.apaleo.engine;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -121,8 +122,7 @@ class EngineClientTest {
     ENGINE.verify(
         postRequestedFor(urlPathEqualTo("/api/v1/records"))
             .withHeader("X-API-Key", equalTo("alpha-key"))
-            .withRequestBody(
-                com.github.tomakehurst.wiremock.client.WireMock.containing("\"sourceObject\"")));
+            .withRequestBody(containing("\"sourceObject\"")));
   }
 
   @Test

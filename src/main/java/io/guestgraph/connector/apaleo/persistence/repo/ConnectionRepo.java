@@ -16,8 +16,9 @@ public interface ConnectionRepo extends Repository<ConnectionEntity, String> {
   /**
    * Native: jsonb cast, and an upsert keeps configuration re-reads idempotent. The file is the
    * authority (FR-015a): a delivery is routed by {@code Connections}, never by this table, and a
-   * connection removed from the file keeps its row and its state, invisible until configured again,
-   * because the rows that reference it are a cache of history worth keeping.
+   * connection removed from the file keeps its row and its state, unread until configured again,
+   * because the rows that reference it are a cache of history worth keeping; its secret hash is not
+   * unique in the table for the same reason.
    */
   @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(

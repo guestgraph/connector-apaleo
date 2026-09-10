@@ -26,17 +26,20 @@ public class ApaleoClients {
     return clients.computeIfAbsent(c.name(), name -> build(c));
   }
 
+  /** A client that answers every status, so the connector decides what a 429 or a 401 means. */
+  private static RestClient.Builder lenient() {
+    return Http.client().defaultStatusHandler(status -> true, (request, response) -> {});
+  }
+
   private ApaleoClient build(ConnectionConfig c) {
-    RestClient.Builder lenient =
-        Http.client().defaultStatusHandler(status -> true, (request, response) -> {});
     ApaleoAuth auth =
         new ApaleoAuth(
-            lenient.baseUrl(properties.apaleo().identityUrl()).build(),
+            lenient().baseUrl(properties.apaleo().identityUrl()).build(),
             c.apaleoClientId(),
             c.apaleoClientSecret(),
             clock);
     return new ApaleoClient(
-        lenient.baseUrl(properties.apaleo().apiUrl()).build(),
+        lenient().baseUrl(properties.apaleo().apiUrl()).build(),
         auth,
         Sleeper.real(),
         properties.apaleo().backoffInitial(),

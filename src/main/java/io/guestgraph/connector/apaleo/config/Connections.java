@@ -38,6 +38,11 @@ public class Connections {
     this(load(properties.connectionsFile()));
   }
 
+  /** The connections a file names, checked as the constructor checks them. */
+  public static Connections from(Path file) {
+    return new Connections(load(file));
+  }
+
   Connections(List<ConnectionConfig> connections) {
     Map<String, ConnectionConfig> names = new LinkedHashMap<>();
     Map<String, ConnectionConfig> hashes = new LinkedHashMap<>();

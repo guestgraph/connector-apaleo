@@ -55,7 +55,12 @@ public class ApaleoAuth {
     if (response.getStatusCode().isError() || response.getBody() == null) {
       throw new ApaleoException("token", response.getStatusCode().value());
     }
-    Map<?, ?> answer = JSON.readValue(response.getBody(), Map.class);
+    Map<?, ?> answer;
+    try {
+      answer = JSON.readValue(response.getBody(), Map.class);
+    } catch (RuntimeException e) {
+      throw new ApaleoException("token body is not JSON", response.getStatusCode().value());
+    }
     if (answer.get("access_token") == null) {
       throw new ApaleoException("token without access_token", response.getStatusCode().value());
     }

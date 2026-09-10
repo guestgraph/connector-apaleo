@@ -1,7 +1,10 @@
 -- The connector's own state, all of it a cache of Apaleo's and the engine's facts
 -- (specs/005-apaleo-connector/data-model.md in the engine repository). No schema is named:
 -- Flyway's default schema and the connection's search path place these in DATABASE_SCHEMA.
--- One instance serves many connections, so every table starts with connection_id.
+-- One instance serves many connections, so every table starts with connection_id. The
+-- configuration file, not this table, routes a delivery and refuses two live connections
+-- sharing a secret; a connection removed from the file keeps its row as history, so the
+-- secret hash carries no uniqueness here on purpose.
 
 CREATE TABLE connection (
     id                  text PRIMARY KEY,
@@ -13,7 +16,6 @@ CREATE TABLE connection (
     last_activity_at    timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE UNIQUE INDEX connection_secret_idx ON connection (webhook_secret_hash);
 
 CREATE TABLE object_state (
     connection_id     text NOT NULL REFERENCES connection (id),
