@@ -13,7 +13,14 @@ CREATE TABLE connection (
     property_ids        jsonb NOT NULL DEFAULT '[]'::jsonb,
     webhook_secret_hash text NOT NULL,
     created_at          timestamptz NOT NULL DEFAULT now(),
-    last_activity_at    timestamptz NOT NULL DEFAULT now()
+    last_activity_at    timestamptz NOT NULL DEFAULT now(),
+    -- The status counters (FR-014), since the row was created: every submission counts here,
+    -- whether a run or an event made it; a run's own counters are on sync_run.
+    versions_submitted  bigint NOT NULL DEFAULT 0,
+    records_submitted   bigint NOT NULL DEFAULT 0,
+    duplicates          bigint NOT NULL DEFAULT 0,
+    flagged_for_review  bigint NOT NULL DEFAULT 0,
+    errors              bigint NOT NULL DEFAULT 0
 );
 
 

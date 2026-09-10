@@ -8,6 +8,7 @@ import io.guestgraph.connector.apaleo.apaleo.model.Reservation;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.ConnectorProperties;
 import io.guestgraph.connector.apaleo.engine.EngineClients;
+import io.guestgraph.connector.apaleo.ops.LastErrors;
 import io.guestgraph.connector.apaleo.persistence.ObjectType;
 import io.guestgraph.connector.apaleo.persistence.repo.ConnectionRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.SyncPointRepo;
@@ -46,6 +47,7 @@ public class FullSync {
   private final ConnectionRepo connections;
   private final TransactionTemplate transactions;
   private final TaskExecutor executor;
+  private final LastErrors lastErrors;
   private final Clock clock;
 
   public FullSync(
@@ -58,6 +60,7 @@ public class FullSync {
       ConnectionRepo connections,
       TransactionTemplate transactions,
       @Qualifier("applicationTaskExecutor") TaskExecutor executor,
+      LastErrors lastErrors,
       Clock clock) {
     this.apaleo = apaleo;
     this.engines = engines;
@@ -68,6 +71,7 @@ public class FullSync {
     this.connections = connections;
     this.transactions = transactions;
     this.executor = executor;
+    this.lastErrors = lastErrors;
     this.clock = clock;
   }
 
@@ -166,6 +170,9 @@ public class FullSync {
       // deliveries Apaleo gave up on, not records the engine refused.
       String outcome = errors == 0 ? "SUCCEEDED" : "FAILED";
       String reason = errors == 0 ? null : errors + " records refused by the engine";
+      if (errors > 0) {
+        lastErrors.record(c.name(), LastErrors.Where.ENGINE, reason);
+      }
       transactions.executeWithoutResult(
           status -> {
             for (String property : properties) {
@@ -177,6 +184,7 @@ public class FullSync {
     } catch (RuntimeException e) {
       // The reason, never a payload: exception messages here carry a status and a path.
       log.error("Full sync {} on connection {} failed: {}", runId, c.name(), e.getMessage());
+      lastErrors.record(c.name(), e, LastErrors.Where.APALEO);
       transactions.executeWithoutResult(
           status -> syncRuns.finish(c.name(), runId, clock.instant(), "FAILED", e.getMessage()));
     } catch (Error e) {

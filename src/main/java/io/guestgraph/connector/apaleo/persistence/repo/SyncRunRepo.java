@@ -80,11 +80,4 @@ public interface SyncRunRepo extends Repository<SyncRunEntity, UUID> {
       @Param("connectionId") String connectionId,
       @Param("at") Instant at,
       @Param("reason") String reason);
-
-  /** Since the connection's state was created: the status counters. */
-  @Query(
-      "select coalesce(sum(r.versionsSubmitted), 0), coalesce(sum(r.recordsSubmitted), 0),"
-          + " coalesce(sum(r.duplicates), 0), coalesce(sum(r.flaggedForReview), 0),"
-          + " coalesce(sum(r.errors), 0) from SyncRunEntity r where r.connectionId = :connectionId")
-  List<Object[]> totals(@Param("connectionId") String connectionId);
 }

@@ -12,6 +12,7 @@ import io.guestgraph.connector.apaleo.mapping.ApaleoMapper;
 import io.guestgraph.connector.apaleo.mapping.RosterHash;
 import io.guestgraph.connector.apaleo.persistence.ObjectType;
 import io.guestgraph.connector.apaleo.persistence.entity.ObjectStateEntity;
+import io.guestgraph.connector.apaleo.persistence.repo.ConnectionRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.HeldGuestIdRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.ObjectStateRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.SyncRunRepo;
@@ -39,6 +40,7 @@ public class ObjectSubmitter {
   private final ObjectStateRepo objectStates;
   private final HeldGuestIdRepo heldGuestIds;
   private final SyncRunRepo syncRuns;
+  private final ConnectionRepo connections;
   private final EngineClients engines;
   private final ApaleoMapper mapper;
   private final Clock clock;
@@ -47,12 +49,14 @@ public class ObjectSubmitter {
       ObjectStateRepo objectStates,
       HeldGuestIdRepo heldGuestIds,
       SyncRunRepo syncRuns,
+      ConnectionRepo connections,
       EngineClients engines,
       ConnectorProperties properties,
       Clock clock) {
     this.objectStates = objectStates;
     this.heldGuestIds = heldGuestIds;
     this.syncRuns = syncRuns;
+    this.connections = connections;
     this.engines = engines;
     this.mapper = new ApaleoMapper(properties.engineSourceSystem());
     this.clock = clock;
@@ -186,6 +190,15 @@ public class ObjectSubmitter {
   }
 
   private void count(ConnectionConfig c, UUID runId, int reservationsSeen, Outcome outcome) {
+    int versions = outcome.kind() == Outcome.Kind.SUBMITTED ? 1 : 0;
+    // The connection's counters see every submission (FR-014); a run's only its own.
+    connections.count(
+        c.name(),
+        versions,
+        outcome.records(),
+        outcome.duplicates(),
+        outcome.flagged(),
+        outcome.errors());
     if (runId == null) {
       return;
     }
