@@ -1,0 +1,243 @@
+{
+  "bookings": [
+    {
+      "id": "XPGMSXGF",
+      "booker": {
+        "firstName": "Anna",
+        "lastName": "Muster",
+        "email": "anna@example.com"
+      },
+      "paymentAccount": {
+        "accountNumber": "411111******1111",
+        "accountHolder": "Card Holder",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false,
+        "isActive": true
+      },
+      "hasActivePaymentAccount": true,
+      "registeredCard": {
+        "cardNumber": "411111******1111",
+        "cardHolder": "Card Holder",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false
+      },
+      "created": "2026-07-01T09:12:00Z",
+      "modified": "2026-07-09T14:30:00Z",
+      "reservations": [
+        {
+          "id": "XPGMSXGF-1",
+          "status": "Confirmed",
+          "channelCode": "Ibe",
+          "source": "Website",
+          "arrival": "2026-08-01T15:00:00+02:00",
+          "departure": "2026-08-04T11:00:00+02:00",
+          "adults": 2,
+          "childrenAges": [],
+          "totalGrossAmount": {
+            "amount": 300.0,
+            "currency": "EUR"
+          },
+          "property": {
+            "id": "BER",
+            "code": "BER",
+            "name": "Berlin"
+          },
+          "ratePlan": {
+            "id": "BER-STD",
+            "code": "STD",
+            "name": "Standard"
+          },
+          "unitGroup": {
+            "id": "BER-DBL",
+            "code": "DBL",
+            "name": "Double"
+          },
+          "hasActivePaymentAccount": true,
+          "isPreCheckedIn": false,
+          "isOpenForCharges": true
+        }
+      ],
+      "comment": "Late arrival"
+    },
+    {
+      "id": "KLMNPQRS",
+      "booker": {
+        "title": "Mr",
+        "firstName": "Daniel",
+        "lastName": "Weber",
+        "email": "daniel.weber@travel-agency.example",
+        "phone": "+41441234567",
+        "address": {
+          "addressLine1": "Reiseweg 5",
+          "postalCode": "3000",
+          "city": "Bern",
+          "countryCode": "CH"
+        },
+        "company": {
+          "name": "Weber Reisen GmbH",
+          "taxId": "CHE-987.654.321"
+        }
+      },
+      "paymentAccount": {
+        "accountNumber": "411111******1111",
+        "accountHolder": "Card Holder",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false,
+        "isActive": true
+      },
+      "hasActivePaymentAccount": true,
+      "registeredCard": {
+        "cardNumber": "411111******1111",
+        "cardHolder": "Card Holder",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false
+      },
+      "created": "2026-07-02T10:00:00Z",
+      "modified": "2026-07-10T08:15:00Z",
+      "reservations": [
+        {
+          "id": "KLMNPQRS-1",
+          "status": "Confirmed",
+          "externalCode": "OTA-778812",
+          "channelCode": "ChannelManager",
+          "source": "Agency",
+          "arrival": "2026-08-01T15:00:00+02:00",
+          "departure": "2026-08-04T11:00:00+02:00",
+          "adults": 3,
+          "childrenAges": [],
+          "totalGrossAmount": {
+            "amount": 300.0,
+            "currency": "EUR"
+          },
+          "property": {
+            "id": "BER",
+            "code": "BER",
+            "name": "Berlin"
+          },
+          "ratePlan": {
+            "id": "BER-STD",
+            "code": "STD",
+            "name": "Standard"
+          },
+          "unitGroup": {
+            "id": "BER-DBL",
+            "code": "DBL",
+            "name": "Double"
+          },
+          "hasActivePaymentAccount": true,
+          "isPreCheckedIn": false,
+          "isOpenForCharges": true,
+          "company": {
+            "id": "WEBER",
+            "code": "WEBER",
+            "name": "Weber Reisen GmbH",
+            "canCheckOutOnAr": false
+          },
+          "externalReferences": {
+            "onlineTravelAgencyId": "OTA-778812"
+          }
+        },
+        {
+          "id": "KLMNPQRS-2",
+          "status": "Confirmed",
+          "channelCode": "ChannelManager",
+          "source": "Agency",
+          "arrival": "2026-08-03T15:00:00+02:00",
+          "departure": "2026-08-06T11:00:00+02:00",
+          "adults": 1,
+          "childrenAges": [],
+          "totalGrossAmount": {
+            "amount": 300.0,
+            "currency": "EUR"
+          },
+          "property": {
+            "id": "BER",
+            "code": "BER",
+            "name": "Berlin"
+          },
+          "ratePlan": {
+            "id": "BER-STD",
+            "code": "STD",
+            "name": "Standard"
+          },
+          "unitGroup": {
+            "id": "BER-SGL",
+            "code": "SGL",
+            "name": "Single"
+          },
+          "hasActivePaymentAccount": true,
+          "isPreCheckedIn": false,
+          "isOpenForCharges": true
+        }
+      ],
+      "comment": "Agency booking",
+      "bookerComment": "Invoice to agency"
+    },
+    {
+      "id": "QRTLMNOP",
+      "booker": {
+        "firstName": "Linh",
+        "lastName": "Nguyen",
+        "email": "linh.nguyen@example.com"
+      },
+      "hasActivePaymentAccount": false,
+      "created": "2026-08-20T08:00:00Z",
+      "modified": "2026-08-20T08:00:00Z",
+      "reservations": [
+        {
+          "id": "QRTLMNOP-1",
+          "status": "Canceled",
+          "channelCode": "BookingCom",
+          "source": "Booking.com",
+          "arrival": "2026-09-10T15:00:00+02:00",
+          "departure": "2026-09-12T11:00:00+02:00",
+          "adults": 1,
+          "childrenAges": [],
+          "totalGrossAmount": {
+            "amount": 300.0,
+            "currency": "EUR"
+          },
+          "property": {
+            "id": "BER",
+            "code": "BER",
+            "name": "Berlin"
+          },
+          "ratePlan": {
+            "id": "BER-STD",
+            "code": "STD",
+            "name": "Standard"
+          },
+          "unitGroup": {
+            "id": "BER-SGL",
+            "code": "SGL",
+            "name": "Single"
+          },
+          "hasActivePaymentAccount": false,
+          "isPreCheckedIn": false,
+          "isOpenForCharges": false
+        }
+      ]
+    },
+    {
+      "id": "EMPTYBKG",
+      "booker": {
+        "firstName": "Hana",
+        "lastName": "Sato",
+        "email": "hana.sato@example.com"
+      },
+      "hasActivePaymentAccount": false,
+      "created": "2026-09-01T12:00:00Z",
+      "modified": "2026-09-01T12:00:00Z",
+      "reservations": []
+    }
+  ],
+  "count": 4
+}

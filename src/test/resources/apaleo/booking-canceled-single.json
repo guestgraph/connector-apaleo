@@ -1,0 +1,45 @@
+{
+  "id": "QRTLMNOP",
+  "booker": {
+    "firstName": "Linh",
+    "lastName": "Nguyen",
+    "email": "linh.nguyen@example.com"
+  },
+  "hasActivePaymentAccount": false,
+  "created": "2026-08-20T08:00:00Z",
+  "modified": "2026-08-20T08:00:00Z",
+  "reservations": [
+    {
+      "id": "QRTLMNOP-1",
+      "status": "Canceled",
+      "channelCode": "BookingCom",
+      "source": "Booking.com",
+      "arrival": "2026-09-10T15:00:00+02:00",
+      "departure": "2026-09-12T11:00:00+02:00",
+      "adults": 1,
+      "childrenAges": [],
+      "totalGrossAmount": {
+        "amount": 300.0,
+        "currency": "EUR"
+      },
+      "property": {
+        "id": "BER",
+        "code": "BER",
+        "name": "Berlin"
+      },
+      "ratePlan": {
+        "id": "BER-STD",
+        "code": "STD",
+        "name": "Standard"
+      },
+      "unitGroup": {
+        "id": "BER-SGL",
+        "code": "SGL",
+        "name": "Single"
+      },
+      "hasActivePaymentAccount": false,
+      "isPreCheckedIn": false,
+      "isOpenForCharges": false
+    }
+  ]
+}

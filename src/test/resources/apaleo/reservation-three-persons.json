@@ -1,0 +1,174 @@
+{
+  "id": "KLMNPQRS-1",
+  "bookingId": "KLMNPQRS",
+  "status": "Confirmed",
+  "property": {
+    "id": "BER",
+    "code": "BER",
+    "name": "Berlin"
+  },
+  "ratePlan": {
+    "id": "BER-STD",
+    "code": "STD",
+    "name": "Standard"
+  },
+  "unitGroup": {
+    "id": "BER-DBL",
+    "code": "DBL",
+    "name": "Double"
+  },
+  "arrival": "2026-08-01T15:00:00+02:00",
+  "departure": "2026-08-04T11:00:00+02:00",
+  "created": "2026-07-02T10:00:00Z",
+  "modified": "2026-07-10T08:15:00Z",
+  "adults": 3,
+  "childrenAges": [],
+  "channelCode": "ChannelManager",
+  "source": "Agency",
+  "primaryGuest": {
+    "title": "Mrs",
+    "gender": "Female",
+    "firstName": "Eva",
+    "lastName": "Keller",
+    "email": "eva.keller@example.com",
+    "phone": "+41441234567",
+    "address": {
+      "addressLine1": "Seestrasse 10",
+      "postalCode": "8002",
+      "city": "Zürich",
+      "countryCode": "CH"
+    },
+    "nationalityCountryCode": "CH",
+    "identificationNumber": "Y7654321",
+    "identificationType": "PassportNumber",
+    "birthDate": "1979-06-21",
+    "preferredLanguage": "de",
+    "company": {
+      "name": "Keller & Co",
+      "taxId": "CHE-111.222.333"
+    }
+  },
+  "additionalGuests": [
+    {
+      "firstName": "Felix",
+      "lastName": "Keller",
+      "birthDate": "1978-02-02",
+      "relationshipToPrimaryGuest": "Spouse"
+    },
+    {
+      "firstName": "Greta",
+      "lastName": "Keller",
+      "email": "greta@example.com",
+      "identificationType": "IdNumber",
+      "relationshipToPrimaryGuest": "Child"
+    }
+  ],
+  "totalGrossAmount": {
+    "amount": 300.0,
+    "currency": "EUR"
+  },
+  "balance": {
+    "amount": 0.0,
+    "currency": "EUR"
+  },
+  "guaranteeType": "CreditCard",
+  "isPreCheckedIn": false,
+  "isOpenForCharges": true,
+  "hasCityTax": true,
+  "paymentAccount": {
+    "accountNumber": "411111******1111",
+    "accountHolder": "Card Holder",
+    "expiryMonth": "12",
+    "expiryYear": "2028",
+    "paymentMethod": "visa",
+    "isVirtual": false,
+    "isActive": true
+  },
+  "hasActivePaymentAccount": true,
+  "registeredCard": {
+    "cardNumber": "411111******1111",
+    "cardHolder": "Card Holder",
+    "expiryMonth": "12",
+    "expiryYear": "2028",
+    "paymentMethod": "visa",
+    "isVirtual": false
+  },
+  "timeSlices": [
+    {
+      "from": "2026-08-01T15:00:00+02:00",
+      "to": "2026-08-04T11:00:00+02:00",
+      "serviceDate": "2026-08-01",
+      "ratePlan": {
+        "id": "BER-STD",
+        "code": "STD",
+        "name": "Standard"
+      },
+      "unitGroup": {
+        "id": "BER-DBL",
+        "code": "DBL",
+        "name": "Double"
+      },
+      "baseAmount": {
+        "grossAmount": 150.0,
+        "netAmount": 140.19,
+        "vatType": "Reduced",
+        "vatPercent": 7.0,
+        "currency": "EUR"
+      },
+      "totalGrossAmount": {
+        "amount": 150.0,
+        "currency": "EUR"
+      }
+    }
+  ],
+  "services": [
+    {
+      "service": {
+        "id": "BER-BRK",
+        "code": "BRK",
+        "name": "Breakfast",
+        "description": "Buffet",
+        "pricingUnit": "Person",
+        "defaultGrossPrice": {
+          "amount": 18.0,
+          "currency": "EUR"
+        },
+        "channelCodes": [
+          "Direct"
+        ]
+      },
+      "totalAmount": {
+        "grossAmount": 54.0,
+        "netAmount": 50.47,
+        "vatType": "Reduced",
+        "vatPercent": 7.0,
+        "currency": "EUR"
+      },
+      "dates": [
+        {
+          "serviceDate": "2026-08-02",
+          "count": 3,
+          "amount": {
+            "grossAmount": 54.0,
+            "netAmount": 50.47,
+            "vatType": "Reduced",
+            "vatPercent": 7.0,
+            "currency": "EUR"
+          },
+          "isMandatory": false
+        }
+      ]
+    }
+  ],
+  "externalCode": "OTA-778812",
+  "externalReferences": {
+    "onlineTravelAgencyId": "OTA-778812"
+  },
+  "company": {
+    "id": "WEBER",
+    "code": "WEBER",
+    "name": "Weber Reisen GmbH",
+    "canCheckOutOnAr": false
+  },
+  "corporateCode": "WEBER"
+}

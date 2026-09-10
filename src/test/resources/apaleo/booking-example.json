@@ -1,0 +1,63 @@
+{
+  "id": "XPGMSXGF",
+  "booker": {
+    "firstName": "Anna",
+    "lastName": "Muster",
+    "email": "anna@example.com"
+  },
+  "paymentAccount": {
+    "accountNumber": "411111******1111",
+    "accountHolder": "Card Holder",
+    "expiryMonth": "12",
+    "expiryYear": "2028",
+    "paymentMethod": "visa",
+    "isVirtual": false,
+    "isActive": true
+  },
+  "hasActivePaymentAccount": true,
+  "registeredCard": {
+    "cardNumber": "411111******1111",
+    "cardHolder": "Card Holder",
+    "expiryMonth": "12",
+    "expiryYear": "2028",
+    "paymentMethod": "visa",
+    "isVirtual": false
+  },
+  "created": "2026-07-01T09:12:00Z",
+  "modified": "2026-07-09T14:30:00Z",
+  "reservations": [
+    {
+      "id": "XPGMSXGF-1",
+      "status": "Confirmed",
+      "channelCode": "Ibe",
+      "source": "Website",
+      "arrival": "2026-08-01T15:00:00+02:00",
+      "departure": "2026-08-04T11:00:00+02:00",
+      "adults": 2,
+      "childrenAges": [],
+      "totalGrossAmount": {
+        "amount": 300.0,
+        "currency": "EUR"
+      },
+      "property": {
+        "id": "BER",
+        "code": "BER",
+        "name": "Berlin"
+      },
+      "ratePlan": {
+        "id": "BER-STD",
+        "code": "STD",
+        "name": "Standard"
+      },
+      "unitGroup": {
+        "id": "BER-DBL",
+        "code": "DBL",
+        "name": "Double"
+      },
+      "hasActivePaymentAccount": true,
+      "isPreCheckedIn": false,
+      "isOpenForCharges": true
+    }
+  ],
+  "comment": "Late arrival"
+}
