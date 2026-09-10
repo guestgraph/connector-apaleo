@@ -4,6 +4,7 @@ import io.guestgraph.connector.apaleo.persistence.entity.EventKey;
 import io.guestgraph.connector.apaleo.persistence.entity.ProcessedEventEntity;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
@@ -31,6 +32,12 @@ public interface ProcessedEventRepo extends Repository<ProcessedEventEntity, Eve
       @Param("propertyId") String propertyId,
       @Param("now") Instant now,
       @Param("state") String state);
+
+  @Query(
+      "select e from ProcessedEventEntity e where e.key.connectionId = :connectionId"
+          + " and e.key.eventId = :eventId")
+  Optional<ProcessedEventEntity> find(
+      @Param("connectionId") String connectionId, @Param("eventId") String eventId);
 
   @Query(
       "select e from ProcessedEventEntity e where e.key.connectionId = :connectionId"

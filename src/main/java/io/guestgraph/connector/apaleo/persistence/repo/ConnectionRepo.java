@@ -1,8 +1,10 @@
 package io.guestgraph.connector.apaleo.persistence.repo;
 
 import io.guestgraph.connector.apaleo.persistence.entity.ConnectionEntity;
+import jakarta.persistence.LockModeType;
 import java.time.Instant;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
@@ -43,9 +45,27 @@ public interface ConnectionRepo extends Repository<ConnectionEntity, String> {
       @Param("secretHash") String secretHash,
       @Param("now") Instant now);
 
+  /** The row, locked until the transaction ends: one run at a time starts on a connection. */
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select c from ConnectionEntity c where c.id = :connectionId")
+  Optional<ConnectionEntity> lock(@Param("connectionId") String connectionId);
+
   @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(
       "update ConnectionEntity c set c.lastActivityAt = :at where c.id = :connectionId"
           + " and c.lastActivityAt < :at")
   int touchActivity(@Param("connectionId") String connectionId, @Param("at") Instant at);
+
+  /**
+   * Moves the activity only when it is not older than {@code notBefore}: an event that arrives
+   * after a gap must not close the gap, since only a full sync recovers what the gap lost.
+   */
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query(
+      "update ConnectionEntity c set c.lastActivityAt = :at where c.id = :connectionId"
+          + " and c.lastActivityAt < :at and c.lastActivityAt >= :notBefore")
+  int touchActivityUnlessGap(
+      @Param("connectionId") String connectionId,
+      @Param("at") Instant at,
+      @Param("notBefore") Instant notBefore);
 }
