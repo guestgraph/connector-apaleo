@@ -10,7 +10,8 @@ and this repository builds what that specification says. Two things there matter
 rest: a reservation and a booking are two source objects, because Apaleo keeps the guests on
 one and the booker on the other, each with its own clock; and the connector owns one database
 schema and connects as one role that sees nothing else, so whether it shares the engine's
-database is a deployment choice.
+database is a deployment choice. One instance serves many connections, each an engine tenant
+paired with an Apaleo account, and every row and query carries the connection.
 
 The connector is being built. `./mvnw verify` runs what exists, `sh conventions/conventions-check`
 holds the prose to the family's conventions, and `AGENTS.md` says how to work here.
