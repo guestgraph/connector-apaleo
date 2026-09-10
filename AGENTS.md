@@ -37,8 +37,9 @@ inline fully qualified name, enforced by PMD in `verify`; formatting is google-j
 Spotless; comments state constraints the code cannot show. ArchUnit in
 `PersistenceRulesTest` holds every repository to explicit `@Query` methods, bans the repository
 scaffolding that would bypass them, bans ad-hoc EntityManager queries and JdbcClient, and
-confines JPA to the `state` package. The connector has one tenant per instance, so the engine's
-tenant-parameter rule does not apply; the one-schema-one-role rule of the data model replaces it.
+confines JPA to the `state` package, and requires a `connectionId` parameter on every repository
+method or a justified `@ConnectionAgnostic`: one instance serves many connections, so the
+engine's tenant rule returns with the connection in the tenant's place.
 
 ## Checks
 

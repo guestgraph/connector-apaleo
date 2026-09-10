@@ -7,11 +7,15 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import io.guestgraph.connector.apaleo.state.ConnectionAgnostic;
+import java.lang.reflect.Parameter;
+import java.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.jpa.repository.Query;
@@ -20,10 +24,10 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.Repository;
 
 /**
- * The engine's persistence guardrails, carried over: every query explicit, no repository
- * scaffolding, no ad-hoc EntityManager queries, no JdbcClient, JPA confined to {@code state}. The
- * engine's tenant-parameter rule does not apply: one connector instance serves one tenant, and the
- * one-schema-one-role rule of the data model isolates it instead.
+ * The engine's persistence guardrails, carried over: every query explicit and scoped, no repository
+ * scaffolding, no ad-hoc EntityManager queries, no JdbcClient, JPA confined to {@code state}. One
+ * instance serves many connections, so the engine's tenant-parameter rule returns with the
+ * connection in the tenant's place.
  */
 class PersistenceRulesTest {
 
@@ -55,6 +59,36 @@ class PersistenceRulesTest {
         .orShould()
         .beAssignableTo(PagingAndSortingRepository.class)
         .because("derived and generic repository methods bypass the reviewed @Query surface")
+        .check(appClasses);
+  }
+
+  @Test
+  void everyRepositoryMethodIsConnectionScoped() {
+    methods()
+        .that()
+        .areDeclaredInClassesThat(SPRING_DATA_REPOSITORY)
+        .should(
+            new ArchCondition<>(
+                "take a connectionId parameter or be @ConnectionAgnostic with a justification") {
+              @Override
+              public void check(JavaMethod method, ConditionEvents events) {
+                if (method.isAnnotatedWith(ConnectionAgnostic.class)) {
+                  return;
+                }
+                boolean hasConnectionId =
+                    Arrays.stream(method.reflect().getParameters())
+                        .map(Parameter::getName)
+                        .anyMatch("connectionId"::equals);
+                if (!hasConnectionId) {
+                  events.add(
+                      SimpleConditionEvent.violated(
+                          method,
+                          method.getFullName()
+                              + " has no connectionId parameter and no @ConnectionAgnostic"));
+                }
+              }
+            })
+        .because("a repository query without a connection predicate reads across connections")
         .check(appClasses);
   }
 
