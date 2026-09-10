@@ -10,8 +10,8 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import io.guestgraph.connector.apaleo.testing.Recorded;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -272,14 +272,7 @@ public abstract class ConnectorIntegrationTest {
 
   /** A recorded Apaleo document, from the test classpath. */
   protected static String document(String name) {
-    try (InputStream in = ConnectorIntegrationTest.class.getResourceAsStream("/apaleo/" + name)) {
-      if (in == null) {
-        throw new IllegalArgumentException("No recorded document " + name);
-      }
-      return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+    return Recorded.document(name);
   }
 
   private static ResponseDefinitionBuilder json(String body) {
