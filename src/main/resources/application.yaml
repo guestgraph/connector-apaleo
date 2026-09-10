@@ -58,11 +58,6 @@ connector:
     backoff-initial: PT1S
     backoff-max: PT1M
 
-logging:
-  structured:
-    format:
-      console: ecs
-
 management:
   endpoints:
     web:
