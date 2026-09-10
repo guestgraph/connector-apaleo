@@ -2,7 +2,6 @@ package io.guestgraph.connector.apaleo.persistence.repo;
 
 import io.guestgraph.connector.apaleo.persistence.entity.ConnectionEntity;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,15 +13,12 @@ public interface ConnectionRepo extends Repository<ConnectionEntity, String> {
   @Query("select c from ConnectionEntity c where c.id = :connectionId")
   Optional<ConnectionEntity> find(@Param("connectionId") String connectionId);
 
-  @ConnectionAgnostic("the status lists every connection")
-  @Query("select c from ConnectionEntity c order by c.id")
-  List<ConnectionEntity> findAll();
-
-  @ConnectionAgnostic("a delivery is routed to its connection by the secret in its path")
-  @Query("select c from ConnectionEntity c where c.webhookSecretHash = :secretHash")
-  Optional<ConnectionEntity> findBySecretHash(@Param("secretHash") String secretHash);
-
-  /** Native: jsonb cast, and an upsert keeps configuration re-reads idempotent. */
+  /**
+   * Native: jsonb cast, and an upsert keeps configuration re-reads idempotent. The file is the
+   * authority (FR-015a): a delivery is routed by {@code Connections}, never by this table, and a
+   * connection removed from the file keeps its row and its state, invisible until configured again,
+   * because the rows that reference it are a cache of history worth keeping.
+   */
   @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(
       nativeQuery = true,

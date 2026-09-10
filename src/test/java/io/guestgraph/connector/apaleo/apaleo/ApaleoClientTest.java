@@ -79,7 +79,14 @@ class ApaleoClientTest {
           }
         };
     ApaleoAuth auth =
-        new ApaleoAuth(Http.client().baseUrl(APALEO.baseUrl()).build(), "id", "secret", clock);
+        new ApaleoAuth(
+            Http.client()
+                .baseUrl(APALEO.baseUrl())
+                .defaultStatusHandler(status -> true, (r, s) -> {})
+                .build(),
+            "id",
+            "secret",
+            clock);
     client =
         new ApaleoClient(
             Http.client()
@@ -101,7 +108,11 @@ class ApaleoClientTest {
     client.getReservation("XPGMSXGF-1");
     APALEO.verify(1, postRequestedFor(urlPathEqualTo("/connect/token")));
 
-    now = now.plusSeconds(3600 - 30);
+    now = now.plusSeconds(3600 - 61);
+    client.getReservation("XPGMSXGF-1");
+    APALEO.verify(1, postRequestedFor(urlPathEqualTo("/connect/token")));
+
+    now = now.plusSeconds(31);
     client.getReservation("XPGMSXGF-1");
 
     APALEO.verify(2, postRequestedFor(urlPathEqualTo("/connect/token")));

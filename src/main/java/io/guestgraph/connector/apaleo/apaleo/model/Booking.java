@@ -1,5 +1,6 @@
 package io.guestgraph.connector.apaleo.apaleo.model;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,8 +30,18 @@ public final class Booking extends ApaleoObject {
     return booker == null ? null : new Person(booker);
   }
 
-  /** The reservations as the booking lists them, reduced by the mapping to what it nests. */
+  /**
+   * The reservations as the booking lists them, each stripped of what never travels; the mapping
+   * reduces them further to what it nests.
+   */
   public List<Map<String, Object>> reservations() {
-    return maps("reservations");
+    return maps("reservations").stream()
+        .map(
+            summary -> {
+              Map<String, Object> kept = new LinkedHashMap<>(summary);
+              kept.keySet().removeAll(Reservation.NEVER_TRAVELS);
+              return Map.copyOf(kept);
+            })
+        .toList();
   }
 }

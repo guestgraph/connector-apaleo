@@ -42,9 +42,9 @@ public class EngineClient {
             .body(JSON.writeValueAsString(Map.of("code", code, "name", name)))
             .retrieve()
             .toBodilessEntity();
-    HttpStatus status = HttpStatus.valueOf(response.getStatusCode().value());
-    if (status != HttpStatus.CREATED && status != HttpStatus.CONFLICT) {
-      throw new EngineException("register source system", status.value());
+    int status = response.getStatusCode().value();
+    if (status != HttpStatus.CREATED.value() && status != HttpStatus.CONFLICT.value()) {
+      throw new EngineException("register source system", status);
     }
   }
 

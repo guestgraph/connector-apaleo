@@ -31,7 +31,7 @@ public class ApaleoClients {
         Http.client().defaultStatusHandler(status -> true, (request, response) -> {});
     ApaleoAuth auth =
         new ApaleoAuth(
-            Http.client().baseUrl(properties.apaleo().identityUrl()).build(),
+            lenient.baseUrl(properties.apaleo().identityUrl()).build(),
             c.apaleoClientId(),
             c.apaleoClientSecret(),
             clock);

@@ -3,12 +3,16 @@ package io.guestgraph.connector.apaleo.apaleo;
 import io.guestgraph.connector.apaleo.apaleo.model.Booking;
 import io.guestgraph.connector.apaleo.apaleo.model.Page;
 import io.guestgraph.connector.apaleo.apaleo.model.Reservation;
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
@@ -21,6 +25,8 @@ import tools.jackson.databind.ObjectMapper;
  * expanded, and a 429 waited out rather than given up on (spec FR-017).
  */
 public class ApaleoClient {
+
+  private static final Logger log = LoggerFactory.getLogger(ApaleoClient.class);
 
   static final int PAGE_SIZE = 500;
   static final String ALL_STATUSES = "Confirmed,InHouse,CheckedOut,Canceled,NoShow";
@@ -49,7 +55,7 @@ public class ApaleoClient {
   /** Reservations of the properties modified from {@code modifiedFrom} on, or all when null. */
   public Optional<Page<Reservation>> listReservations(
       List<String> propertyIds, Instant modifiedFrom, int page) {
-    Function<UriBuilder, java.net.URI> uri =
+    Function<UriBuilder, URI> uri =
         b -> {
           b.path("/booking/v1/reservations")
               .queryParam("status", ALL_STATUSES)
@@ -60,7 +66,8 @@ public class ApaleoClient {
             b.queryParam("propertyIds", String.join(",", propertyIds));
           }
           if (modifiedFrom != null) {
-            b.queryParam("dateFilter", "Modification").queryParam("from", modifiedFrom.toString());
+            b.queryParam("dateFilter", "Modification")
+                .queryParam("from", modifiedFrom.truncatedTo(ChronoUnit.SECONDS).toString());
           }
           return b.build();
         };
@@ -89,7 +96,7 @@ public class ApaleoClient {
 
   @SuppressWarnings("unchecked")
   private <T> Optional<Page<T>> getPage(
-      Function<UriBuilder, java.net.URI> uri, String key, Function<Map<String, Object>, T> item) {
+      Function<UriBuilder, URI> uri, String key, Function<Map<String, Object>, T> item) {
     ResponseEntity<String> response = exchange(spec -> spec.uri(uri));
     if (response.getStatusCode() == HttpStatus.NO_CONTENT || response.getBody() == null) {
       return Optional.empty();
@@ -142,6 +149,7 @@ public class ApaleoClient {
         return response;
       }
       Duration wait = retryAfter(response).orElse(backoff);
+      log.info("Apaleo rate limit: waiting {} before retrying", wait);
       try {
         sleeper.sleep(wait);
       } catch (InterruptedException e) {

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,7 +15,12 @@ import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.representer.Representer;
+import org.yaml.snakeyaml.resolver.Resolver;
 
 /**
  * The configured connections, read once from the file {@code connector.connections-file} names
@@ -67,13 +73,13 @@ public class Connections {
     return Optional.empty();
   }
 
-  private static List<ConnectionConfig> load(java.nio.file.Path file) {
+  private static List<ConnectionConfig> load(Path file) {
     if (file == null) {
       throw new IllegalStateException("connector.connections-file is not set");
     }
     Map<String, Object> root;
     try (InputStream in = Files.newInputStream(file)) {
-      root = new Yaml().load(in);
+      root = stringsOnly().load(in);
     } catch (IOException e) {
       throw new IllegalStateException("Cannot read connections file " + file, e);
     }
@@ -120,6 +126,22 @@ public class Connections {
               text(fields, "webhookSecret")));
     }
     return connections;
+  }
+
+  /** Every scalar is a string: a secret of digits must not become a number on the way in. */
+  private static Yaml stringsOnly() {
+    LoaderOptions options = new LoaderOptions();
+    Resolver strings =
+        new Resolver() {
+          @Override
+          protected void addImplicitResolvers() {}
+        };
+    return new Yaml(
+        new SafeConstructor(options),
+        new Representer(new DumperOptions()),
+        new DumperOptions(),
+        options,
+        strings);
   }
 
   private static String text(Map<?, ?> fields, String key) {

@@ -14,8 +14,9 @@ public record IngestResult(
     List<UUID> pendingReviewIds,
     Map<String, Object> problem) {
 
+  /** The engine refused or could not store the record; a missing guest id alone is not that. */
   public boolean failed() {
-    return "ERROR".equals(status) || guestId == null;
+    return "ERROR".equals(status);
   }
 
   public boolean duplicate() {
