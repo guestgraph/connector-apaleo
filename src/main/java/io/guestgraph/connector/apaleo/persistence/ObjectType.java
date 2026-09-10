@@ -1,4 +1,4 @@
-package io.guestgraph.connector.apaleo.state;
+package io.guestgraph.connector.apaleo.persistence;
 
 /** The two Apaleo objects the connector observes, each with its own clock and roster. */
 public enum ObjectType {

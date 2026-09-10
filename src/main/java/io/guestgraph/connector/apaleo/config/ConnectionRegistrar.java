@@ -1,6 +1,6 @@
 package io.guestgraph.connector.apaleo.config;
 
-import io.guestgraph.connector.apaleo.state.ConnectionRepo;
+import io.guestgraph.connector.apaleo.persistence.repo.ConnectionRepo;
 import java.time.Clock;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;

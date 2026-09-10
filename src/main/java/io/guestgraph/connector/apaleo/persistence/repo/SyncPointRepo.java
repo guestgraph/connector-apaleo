@@ -1,5 +1,7 @@
-package io.guestgraph.connector.apaleo.state;
+package io.guestgraph.connector.apaleo.persistence.repo;
 
+import io.guestgraph.connector.apaleo.persistence.entity.SyncPointEntity;
+import io.guestgraph.connector.apaleo.persistence.entity.SyncPointKey;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;

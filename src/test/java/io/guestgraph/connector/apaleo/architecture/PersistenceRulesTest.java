@@ -13,7 +13,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
-import io.guestgraph.connector.apaleo.state.ConnectionAgnostic;
+import io.guestgraph.connector.apaleo.persistence.repo.ConnectionAgnostic;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,8 +25,8 @@ import org.springframework.data.repository.Repository;
 
 /**
  * The engine's persistence guardrails, carried over: every query explicit and scoped, no repository
- * scaffolding, no ad-hoc EntityManager queries, no JdbcClient, JPA confined to {@code state}. One
- * instance serves many connections, so the engine's tenant-parameter rule returns with the
+ * scaffolding, no ad-hoc EntityManager queries, no JdbcClient, JPA confined to {@code persistence}.
+ * One instance serves many connections, so the engine's tenant-parameter rule returns with the
  * connection in the tenant's place.
  */
 class PersistenceRulesTest {
@@ -144,7 +144,7 @@ class PersistenceRulesTest {
   void onlyStateDependsOnJpa() {
     noClasses()
         .that()
-        .resideOutsideOfPackage("io.guestgraph.connector.apaleo.state..")
+        .resideOutsideOfPackage("io.guestgraph.connector.apaleo.persistence..")
         .should()
         .dependOnClassesThat(
             new DescribedPredicate<>("belong to jakarta.persistence or Hibernate") {
@@ -154,7 +154,8 @@ class PersistenceRulesTest {
                 return name.startsWith("jakarta.persistence") || name.startsWith("org.hibernate");
               }
             })
-        .because("the clients, the mapping and the runs are storage-agnostic")
+        .because(
+            "the clients, the mapping and the runs are storage-agnostic; JPA is a persistence-internal detail")
         .check(appClasses);
   }
 }

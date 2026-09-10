@@ -1,4 +1,4 @@
-package io.guestgraph.connector.apaleo.state;
+package io.guestgraph.connector.apaleo.persistence.entity;
 
 import jakarta.persistence.Embeddable;
 

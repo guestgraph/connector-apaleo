@@ -1,5 +1,7 @@
-package io.guestgraph.connector.apaleo.state;
+package io.guestgraph.connector.apaleo.persistence.repo;
 
+import io.guestgraph.connector.apaleo.persistence.entity.EventKey;
+import io.guestgraph.connector.apaleo.persistence.entity.ProcessedEventEntity;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.data.jpa.repository.Modifying;
