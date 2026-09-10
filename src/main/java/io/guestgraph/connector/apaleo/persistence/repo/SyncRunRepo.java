@@ -71,6 +71,16 @@ public interface SyncRunRepo extends Repository<SyncRunEntity, UUID> {
       @Param("outcome") String outcome,
       @Param("error") String error);
 
+  /** A run cannot outlive the process that ran it: whatever is open at start was interrupted. */
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query(
+      "update SyncRunEntity r set r.finishedAt = :at, r.outcome = 'FAILED', r.lastError = :reason"
+          + " where r.connectionId = :connectionId and r.finishedAt is null")
+  int finishInterrupted(
+      @Param("connectionId") String connectionId,
+      @Param("at") Instant at,
+      @Param("reason") String reason);
+
   /** Since the connection's state was created: the status counters. */
   @Query(
       "select coalesce(sum(r.versionsSubmitted), 0), coalesce(sum(r.recordsSubmitted), 0),"

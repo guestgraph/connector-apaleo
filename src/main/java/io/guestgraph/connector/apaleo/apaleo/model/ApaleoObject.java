@@ -1,5 +1,6 @@
 package io.guestgraph.connector.apaleo.apaleo.model;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,8 @@ public abstract class ApaleoObject {
   protected ApaleoObject(Map<String, Object> raw, Set<String> neverTravels) {
     Map<String, Object> kept = new LinkedHashMap<>(raw);
     kept.keySet().removeAll(neverTravels);
-    this.fields = Map.copyOf(kept);
+    // Not Map.copyOf: a JSON null is a value Apaleo sends, and document order is kept.
+    this.fields = Collections.unmodifiableMap(kept);
   }
 
   public String text(String key) {

@@ -1,5 +1,6 @@
 package io.guestgraph.connector.apaleo.apaleo.model;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,7 @@ public final class Booking extends ApaleoObject {
             summary -> {
               Map<String, Object> kept = new LinkedHashMap<>(summary);
               kept.keySet().removeAll(Reservation.NEVER_TRAVELS);
-              return Map.copyOf(kept);
+              return Collections.unmodifiableMap(kept);
             })
         .toList();
   }
