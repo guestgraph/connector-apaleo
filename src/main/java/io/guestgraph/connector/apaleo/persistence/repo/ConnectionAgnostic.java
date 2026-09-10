@@ -1,4 +1,4 @@
-package io.guestgraph.connector.apaleo.state;
+package io.guestgraph.connector.apaleo.persistence.repo;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -31,12 +31,32 @@ spring:
 server:
   port: 8081
 
+# The instance's configuration (data-model "Configuration"). Connections and their secrets live
+# in the file connections-file names, never here and never in the database.
 connector:
+  public-url: ${CONNECTOR_PUBLIC_URL:}
+  ops-token: ${CONNECTOR_OPS_TOKEN:}
+  connections-file: ${CONNECTOR_CONNECTIONS_FILE:}
+  engine-source-system: ${ENGINE_SOURCE_SYSTEM:apaleo}
+  resync-after-gap: ${RESYNC_AFTER_GAP:PT24H}
+  refresh-cron: ${REFRESH_CRON:0 0 3 * * *}
+  reconcile:
+    interval: ${RECONCILE_INTERVAL:PT15M}
+    overlap: ${RECONCILE_OVERLAP:PT1H}
   apaleo:
     # The three hosts a connection's client talks to; tests point them at a stub.
     identity-url: https://identity.apaleo.com
     api-url: https://api.apaleo.com
     webhook-url: https://webhook.apaleo.com
+    # The event types that can carry a change of person (spec FR-007); a sandbox session may widen it.
+    event-types: ${APALEO_EVENT_TYPES:reservation/created,reservation/changed,reservation/amended,reservation/picked-up-from-block,reservation/checked-in,booking/created,booking/changed}
+    backoff-initial: PT1S
+    backoff-max: PT1M
+
+logging:
+  structured:
+    format:
+      console: ecs
 
 management:
   endpoints:

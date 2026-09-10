@@ -2,6 +2,7 @@ package io.guestgraph.connector.apaleo.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.guestgraph.connector.apaleo.testing.Recorded;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -42,13 +43,11 @@ class RecordedDocumentsTest {
             "event-reservation-changed.json",
             "event-booking-changed.json",
             "token.json")) {
-      assertThat(MAPPER.readTree(ConnectorIntegrationTest.document(name)).isObject())
-          .as(name)
-          .isTrue();
+      assertThat(MAPPER.readTree(Recorded.document(name)).isObject()).as(name).isTrue();
     }
     SINGLE_RESERVATIONS.forEach(n -> assertThat(read(n).get("id").asString()).isNotBlank());
     SINGLE_BOOKINGS.forEach(n -> assertThat(read(n).get("id").asString()).isNotBlank());
-    assertThat(ConnectorIntegrationTest.document("event-reachability.json")).isEmpty();
+    assertThat(Recorded.document("event-reachability.json")).isEmpty();
   }
 
   @Test
@@ -99,7 +98,7 @@ class RecordedDocumentsTest {
   }
 
   private static JsonNode read(String name) {
-    return MAPPER.readTree(ConnectorIntegrationTest.document(name));
+    return MAPPER.readTree(Recorded.document(name));
   }
 
   private static Stream<JsonNode> stream(JsonNode array) {
