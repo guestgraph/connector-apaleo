@@ -123,8 +123,8 @@ Behind `Authorization: Bearer {CONNECTOR_OPS_TOKEN}`:
 - `POST /connections/{name}/sync/full` and `POST /connections/{name}/sync/reconcile` start a run
   on one connection and answer 202 with the run id, or 409 while a run is in progress.
 - `GET /connections/{name}/runs/{runId}` reports the run's progress and outcome.
-- `POST /connections/{name}/refresh` is in the contract and arrives with user story 4 of the
-  specification; it is not served yet.
+- `POST /connections/{name}/refresh` re-reads the connection's held guest ids and answers 202
+  with the run id.
 
 `/actuator/health` needs no token.
 
@@ -148,8 +148,8 @@ by a merge or a split in the engine, so the held ids are re-read and the integra
 engine defines is applied: a merged guest is replaced by its survivor and both ids are logged; a
 split or retired guest is kept, marked with the current ids and counted in the status as
 awaiting a person; an active guest is left alone. The connector never chooses among several
-current guests. The refresh that applies the rule is user story 4 of the specification and is
-not built yet; once it lands it runs nightly, on `REFRESH_CRON`, and on request. R8 of the
+current guests. The refresh that applies the rule runs nightly, on `REFRESH_CRON`, and on
+request. R8 of the
 [research](https://github.com/guestgraph/engine/blob/main/specs/005-apaleo-connector/research.md)
 and FR-018 and FR-019 of the
 [specification](https://github.com/guestgraph/engine/blob/main/specs/005-apaleo-connector/spec.md)

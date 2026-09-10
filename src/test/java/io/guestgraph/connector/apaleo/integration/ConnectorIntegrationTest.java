@@ -120,6 +120,7 @@ public abstract class ConnectorIntegrationTest {
     // The scheduled runs never fire in tests; a test drains and reconciles by hand.
     registry.add("connector.events.poll-interval", () -> "PT1H");
     registry.add("connector.reconcile.interval", () -> "PT1H");
+    registry.add("connector.refresh-cron", () -> "-");
     registry.add("connector.connections-file", () -> CONNECTIONS_FILE.toString());
     registry.add("connector.apaleo.identity-url", APALEO::baseUrl);
     registry.add("connector.apaleo.api-url", APALEO::baseUrl);

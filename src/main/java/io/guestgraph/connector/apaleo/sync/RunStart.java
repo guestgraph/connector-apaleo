@@ -10,9 +10,9 @@ import java.util.UUID;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * One run at a time on a connection, whatever its kind: the full sync and the reconciliation walk
- * the same list, so the connection row is locked while the open runs are read and the new one is
- * written, and a scheduler tick and a request cannot both pass.
+ * One walk at a time on a connection: the full sync and the reconciliation walk the same list, so
+ * the connection row is locked while the open runs are read and the new one is written, and a
+ * scheduler tick and a request cannot both pass. A refresh walks no list and is not counted.
  */
 final class RunStart {
 
@@ -29,7 +29,10 @@ final class RunStart {
         status -> {
           connections.lock(c.name());
           Optional<String> running =
-              syncRuns.findRunning(c.name()).stream().map(SyncRunEntity::getKind).findFirst();
+              syncRuns.findRunning(c.name()).stream()
+                  .map(SyncRunEntity::getKind)
+                  .filter(k -> !Refresh.KIND.equals(k))
+                  .findFirst();
           if (running.isPresent()) {
             throw new RunInProgressException(c.name(), running.get());
           }
