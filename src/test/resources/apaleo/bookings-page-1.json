@@ -1,0 +1,146 @@
+{
+  "bookings": [
+    {
+      "id": "XPGMSXGF",
+      "booker": {
+        "title": "Mr",
+        "firstName": "Daniel",
+        "lastName": "Weber",
+        "email": "daniel.weber@travel-agency.example",
+        "phone": "+41441234567",
+        "address": {
+          "addressLine1": "Reiseweg 5",
+          "postalCode": "3000",
+          "city": "Bern",
+          "countryCode": "CH"
+        },
+        "company": {
+          "name": "Weber Reisen GmbH",
+          "taxId": "CHE-987.654.321"
+        }
+      },
+      "paymentAccount": {
+        "accountNumber": "555555******4444",
+        "accountHolder": "Daniel Weber",
+        "expiryMonth": "06",
+        "expiryYear": "2027",
+        "paymentMethod": "mastercard",
+        "isVirtual": false
+      },
+      "hasActivePaymentAccount": true,
+      "registeredCard": {
+        "cardNumber": "555555******4444",
+        "cardHolder": "Daniel Weber",
+        "expiryMonth": "06",
+        "expiryYear": "2027",
+        "paymentMethod": "mastercard",
+        "isVirtual": false
+      },
+      "comment": "Agency booking",
+      "bookerComment": "Invoice to agency",
+      "created": "2026-07-01T09:12:00Z",
+      "modified": "2026-07-09T14:30:00Z",
+      "reservations": [
+        {
+          "id": "XPGMSXGF-1",
+          "status": "Confirmed",
+          "externalCode": "OTA-778812",
+          "channelCode": "Ibe",
+          "source": "Website",
+          "arrival": "2026-08-01T15:00:00+02:00",
+          "departure": "2026-08-04T11:00:00+02:00",
+          "adults": 3,
+          "childrenAges": [],
+          "property": {
+            "id": "BER",
+            "code": "BER",
+            "name": "Berlin"
+          },
+          "ratePlan": {
+            "id": "BER-STD",
+            "code": "STD",
+            "name": "Standard"
+          },
+          "unitGroup": {
+            "id": "BER-DBL",
+            "code": "DBL",
+            "name": "Double"
+          },
+          "hasActivePaymentAccount": true,
+          "isPreCheckedIn": false,
+          "isOpenForCharges": true
+        },
+        {
+          "id": "XPGMSXGF-2",
+          "status": "Confirmed",
+          "channelCode": "Ibe",
+          "source": "Website",
+          "arrival": "2026-08-03T15:00:00+02:00",
+          "departure": "2026-08-06T11:00:00+02:00",
+          "adults": 1,
+          "childrenAges": [],
+          "property": {
+            "id": "BER",
+            "code": "BER",
+            "name": "Berlin"
+          },
+          "ratePlan": {
+            "id": "BER-STD",
+            "code": "STD",
+            "name": "Standard"
+          },
+          "unitGroup": {
+            "id": "BER-SGL",
+            "code": "SGL",
+            "name": "Single"
+          },
+          "hasActivePaymentAccount": true,
+          "isPreCheckedIn": false,
+          "isOpenForCharges": true
+        }
+      ]
+    },
+    {
+      "id": "QRTLMNOP",
+      "booker": {
+        "firstName": "Linh",
+        "lastName": "Nguyen",
+        "email": "linh.nguyen@example.com"
+      },
+      "hasActivePaymentAccount": false,
+      "created": "2026-08-20T08:00:00Z",
+      "modified": "2026-08-20T08:00:00Z",
+      "reservations": [
+        {
+          "id": "QRTLMNOP-1",
+          "status": "Canceled",
+          "channelCode": "BookingCom",
+          "source": "Booking.com",
+          "arrival": "2026-09-10T15:00:00+02:00",
+          "departure": "2026-09-12T11:00:00+02:00",
+          "adults": 1,
+          "childrenAges": [],
+          "property": {
+            "id": "BER",
+            "code": "BER",
+            "name": "Berlin"
+          },
+          "ratePlan": {
+            "id": "BER-STD",
+            "code": "STD",
+            "name": "Standard"
+          },
+          "unitGroup": {
+            "id": "BER-SGL",
+            "code": "SGL",
+            "name": "Single"
+          },
+          "hasActivePaymentAccount": false,
+          "isPreCheckedIn": false,
+          "isOpenForCharges": false
+        }
+      ]
+    }
+  ],
+  "count": 2
+}

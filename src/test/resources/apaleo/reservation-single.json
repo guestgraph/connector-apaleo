@@ -1,0 +1,28 @@
+{
+  "id": "QRTLMNOP-1",
+  "bookingId": "QRTLMNOP",
+  "status": "Canceled",
+  "property": { "id": "BER", "code": "BER", "name": "Berlin" },
+  "ratePlan": { "id": "BER-STD", "code": "STD", "name": "Standard" },
+  "unitGroup": { "id": "BER-SGL", "code": "SGL", "name": "Single" },
+  "arrival": "2026-09-10T15:00:00+02:00",
+  "departure": "2026-09-12T11:00:00+02:00",
+  "created": "2026-08-20T08:00:00Z",
+  "modified": "2026-08-25T17:45:10Z",
+  "cancellationTime": "2026-08-25T17:45:10Z",
+  "adults": 1,
+  "childrenAges": [],
+  "channelCode": "BookingCom",
+  "source": "Booking.com",
+  "primaryGuest": {
+    "lastName": "Nguyen",
+    "firstName": "Linh",
+    "email": "linh.nguyen@example.com"
+  },
+  "additionalGuests": [],
+  "hasActivePaymentAccount": false,
+  "guaranteeType": "Ota",
+  "isPreCheckedIn": false,
+  "isOpenForCharges": false,
+  "hasCityTax": true
+}

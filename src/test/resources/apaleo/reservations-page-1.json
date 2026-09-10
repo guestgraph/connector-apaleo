@@ -1,0 +1,207 @@
+{
+  "reservations": [
+    {
+      "id": "XPGMSXGF-1",
+      "bookingId": "XPGMSXGF",
+      "status": "Confirmed",
+      "property": {
+        "id": "BER",
+        "code": "BER",
+        "name": "Berlin"
+      },
+      "ratePlan": {
+        "id": "BER-STD",
+        "code": "STD",
+        "name": "Standard"
+      },
+      "unitGroup": {
+        "id": "BER-DBL",
+        "code": "DBL",
+        "name": "Double"
+      },
+      "arrival": "2026-08-01T15:00:00+02:00",
+      "departure": "2026-08-04T11:00:00+02:00",
+      "created": "2026-07-01T09:12:00Z",
+      "modified": "2026-07-09T14:30:00Z",
+      "adults": 3,
+      "childrenAges": [],
+      "comment": "Late arrival",
+      "guestComment": "Quiet room please",
+      "externalCode": "OTA-778812",
+      "channelCode": "Ibe",
+      "source": "Website",
+      "travelPurpose": "Leisure",
+      "primaryGuest": {
+        "title": "Ms",
+        "gender": "Female",
+        "firstName": "Anna",
+        "lastName": "Muster",
+        "email": "anna@example.com",
+        "phone": "+41791112233",
+        "address": {
+          "addressLine1": "Bahnhofstrasse 1",
+          "postalCode": "8001",
+          "city": "Zürich",
+          "countryCode": "CH"
+        },
+        "nationalityCountryCode": "CH",
+        "identificationNumber": "X1234567",
+        "identificationType": "PassportNumber",
+        "identificationIssueDate": "2020-05-04",
+        "identificationExpiryDate": "2030-05-03",
+        "birthDate": "1984-03-12",
+        "birthPlace": "Bern",
+        "preferredLanguage": "de",
+        "company": {
+          "name": "Muster AG",
+          "taxId": "CHE-123.456.789"
+        }
+      },
+      "additionalGuests": [
+        {
+          "firstName": "Bruno",
+          "lastName": "Muster",
+          "birthDate": "1982-11-30",
+          "relationshipToPrimaryGuest": "Spouse"
+        },
+        {
+          "firstName": "Clara",
+          "lastName": "Muster",
+          "email": "clara@example.com",
+          "identificationType": "IdNumber",
+          "relationshipToPrimaryGuest": "Child"
+        }
+      ],
+      "booker": {
+        "firstName": "Anna",
+        "lastName": "Muster",
+        "email": "anna@example.com"
+      },
+      "paymentAccount": {
+        "accountNumber": "411111******1111",
+        "accountHolder": "Anna Muster",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false
+      },
+      "hasActivePaymentAccount": true,
+      "registeredCard": {
+        "cardNumber": "411111******1111",
+        "cardHolder": "Anna Muster",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false
+      },
+      "guaranteeType": "CreditCard",
+      "company": {
+        "id": "MUSTER",
+        "code": "MUSTER",
+        "name": "Muster AG",
+        "canCheckOutOnAr": false
+      },
+      "externalReferences": {
+        "onlineTravelAgencyId": "OTA-778812"
+      },
+      "isPreCheckedIn": false,
+      "isOpenForCharges": true,
+      "hasCityTax": true
+    },
+    {
+      "id": "XPGMSXGF-2",
+      "bookingId": "XPGMSXGF",
+      "status": "Confirmed",
+      "property": {
+        "id": "BER",
+        "code": "BER",
+        "name": "Berlin"
+      },
+      "ratePlan": {
+        "id": "BER-STD",
+        "code": "STD",
+        "name": "Standard"
+      },
+      "unitGroup": {
+        "id": "BER-DBL",
+        "code": "DBL",
+        "name": "Double"
+      },
+      "arrival": "2026-08-03T15:00:00+02:00",
+      "departure": "2026-08-06T11:00:00+02:00",
+      "created": "2026-07-01T09:12:00Z",
+      "modified": "2026-07-09T14:30:00Z",
+      "adults": 1,
+      "childrenAges": [],
+      "comment": "Late arrival",
+      "guestComment": "Quiet room please",
+      "externalCode": "OTA-778812",
+      "channelCode": "Ibe",
+      "source": "Website",
+      "travelPurpose": "Leisure",
+      "primaryGuest": {
+        "title": "Ms",
+        "gender": "Female",
+        "firstName": "Anna",
+        "lastName": "Muster",
+        "email": "anna@example.com",
+        "phone": "+41791112233",
+        "address": {
+          "addressLine1": "Bahnhofstrasse 1",
+          "postalCode": "8001",
+          "city": "Zürich",
+          "countryCode": "CH"
+        },
+        "nationalityCountryCode": "CH",
+        "identificationNumber": "X1234567",
+        "identificationType": "PassportNumber",
+        "identificationIssueDate": "2020-05-04",
+        "identificationExpiryDate": "2030-05-03",
+        "birthDate": "1984-03-12",
+        "birthPlace": "Bern",
+        "preferredLanguage": "de",
+        "company": {
+          "name": "Muster AG",
+          "taxId": "CHE-123.456.789"
+        }
+      },
+      "additionalGuests": [],
+      "booker": {
+        "firstName": "Anna",
+        "lastName": "Muster",
+        "email": "anna@example.com"
+      },
+      "paymentAccount": {
+        "accountNumber": "411111******1111",
+        "accountHolder": "Anna Muster",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false
+      },
+      "hasActivePaymentAccount": true,
+      "registeredCard": {
+        "cardNumber": "411111******1111",
+        "cardHolder": "Anna Muster",
+        "expiryMonth": "12",
+        "expiryYear": "2028",
+        "paymentMethod": "visa",
+        "isVirtual": false
+      },
+      "guaranteeType": "CreditCard",
+      "company": {
+        "id": "MUSTER",
+        "code": "MUSTER",
+        "name": "Muster AG",
+        "canCheckOutOnAr": false
+      },
+      "externalReferences": {
+        "onlineTravelAgencyId": "OTA-778812"
+      },
+      "isPreCheckedIn": false,
+      "isOpenForCharges": true,
+      "hasCityTax": true
+    }
+  ],
+  "count": 3
+}

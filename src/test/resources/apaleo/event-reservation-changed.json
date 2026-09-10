@@ -1,0 +1,12 @@
+{
+  "topic": "Reservation",
+  "type": "changed",
+  "id": "5a2d0a9e-8a8b-4d64-9e0b-2f8a3c1d1e01",
+  "accountId": "ACME",
+  "propertyId": "BER",
+  "timestamp": "2026-07-09T14:30:07Z",
+  "clientId": "ACME-IBE",
+  "data": {
+    "entityId": "XPGMSXGF-1"
+  }
+}

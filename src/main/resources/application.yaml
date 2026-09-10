@@ -8,11 +8,14 @@ spring:
     problemdetails:
       enabled: true
   datasource:
-    # One schema, one role (data-model "One schema, one role"): the connector touches nothing
-    # outside DATABASE_SCHEMA, whether the database is the engine's or its own.
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/connector}?currentSchema=${DATABASE_SCHEMA:apaleo_connector}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/connector}
     username: ${DATABASE_USERNAME:apaleo_connector}
     password: ${DATABASE_PASSWORD:apaleo_connector}
+    hikari:
+      # One schema, one role (data-model "One schema, one role"): every pooled connection opens
+      # with this search path, so the connector touches nothing outside DATABASE_SCHEMA whether
+      # the database is the engine's or its own. The same shape the engine uses (its slice 6).
+      schema: ${DATABASE_SCHEMA:apaleo_connector}
   flyway:
     enabled: true
     default-schema: ${DATABASE_SCHEMA:apaleo_connector}
