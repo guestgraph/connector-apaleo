@@ -91,9 +91,8 @@ class RefreshTest extends ConnectorIntegrationTest {
     assertThat(run.get("outcome").asString()).isEqualTo("SUCCEEDED");
 
     List<HeldGuestIdEntity> r1 = heldGuestIds.findByObject(ALPHA.name(), "reservation", "R-1");
-    HeldGuestIdEntity additional = r1.get(0);
-    HeldGuestIdEntity primary = r1.get(1);
-    assertThat(primary.getKey().role()).isEqualTo("PRIMARY_GUEST");
+    HeldGuestIdEntity primary = slot(r1, "PRIMARY_GUEST");
+    HeldGuestIdEntity additional = slot(r1, "ADDITIONAL_GUEST");
     assertThat(primary.getGuestId()).isEqualTo(active);
     assertThat(primary.getResolutionStatus()).isEqualTo("ACTIVE");
     assertThat(additional.getGuestId()).as("merged: replaced by the survivor").isEqualTo(survivor);
@@ -111,10 +110,11 @@ class RefreshTest extends ConnectorIntegrationTest {
     assertThat(retiredRow.getCurrentGuestIds()).isEmpty();
     assertThat(retiredRow.getRefreshedAt()).isNotNull();
 
-    String log =
-        String.join("\n", LOG.list.stream().map(ILoggingEvent::getFormattedMessage).toList());
-    assertThat(log).contains(merged.toString()).contains(survivor.toString());
-    assertThat(log).doesNotContain(active.toString());
+    List<String> lines = LOG.list.stream().map(ILoggingEvent::getFormattedMessage).toList();
+    assertThat(lines)
+        .as("one line names both ids")
+        .anySatisfy(line -> assertThat(line).contains(merged.toString(), survivor.toString()));
+    assertThat(String.join("\n", lines)).doesNotContain(active.toString());
 
     JsonNode alpha = connection(ops("/status"), "alpha");
     assertThat(alpha.get("splitsAwaitingPerson").asInt()).isEqualTo(2);
@@ -183,6 +183,10 @@ class RefreshTest extends ConnectorIntegrationTest {
             "guest:XPGMSXGF-1:primaryGuest:2026-07-09T14:30:00Z".getBytes(StandardCharsets.UTF_8));
     assertThat(primary.getGuestId()).isNotEqualTo(stale).isEqualTo(expected);
     assertThat(primary.getResolutionStatus()).isEqualTo("ACTIVE");
+  }
+
+  private static HeldGuestIdEntity slot(List<HeldGuestIdEntity> rows, String role) {
+    return rows.stream().filter(h -> h.getKey().role().equals(role)).findFirst().orElseThrow();
   }
 
   private void hold(Connection c, String type, String id, String role, int position, UUID guest) {
