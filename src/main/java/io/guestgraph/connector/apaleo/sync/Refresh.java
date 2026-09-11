@@ -1,12 +1,12 @@
 package io.guestgraph.connector.apaleo.sync;
 
+import io.guestgraph.connector.apaleo.api.ops.LastErrors;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
 import io.guestgraph.connector.apaleo.engine.EngineClient;
 import io.guestgraph.connector.apaleo.engine.EngineClients;
 import io.guestgraph.connector.apaleo.engine.EngineException;
 import io.guestgraph.connector.apaleo.engine.model.GuestResolution;
-import io.guestgraph.connector.apaleo.ops.LastErrors;
 import io.guestgraph.connector.apaleo.persistence.repo.HeldGuestIdRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.SyncRunRepo;
 import java.time.Clock;

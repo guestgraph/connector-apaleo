@@ -6,10 +6,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.guestgraph.connector.apaleo.api.events.EventWorker;
+import io.guestgraph.connector.apaleo.api.events.Subscriptions;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
-import io.guestgraph.connector.apaleo.events.EventWorker;
-import io.guestgraph.connector.apaleo.events.Subscriptions;
 import io.guestgraph.connector.apaleo.persistence.entity.SyncRunEntity;
 import io.guestgraph.connector.apaleo.persistence.repo.ObjectStateRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.SyncPointRepo;

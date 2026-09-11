@@ -1,15 +1,15 @@
-package io.guestgraph.connector.apaleo.ops;
+package io.guestgraph.connector.apaleo.api.ops;
 
+import io.guestgraph.connector.apaleo.api.events.Subscriptions;
+import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.ConnectionStatus;
+import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Counters;
+import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Run;
+import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.RunStarted;
+import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Status;
+import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Subscription;
+import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.SyncPoint;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
-import io.guestgraph.connector.apaleo.events.Subscriptions;
-import io.guestgraph.connector.apaleo.ops.StatusDocuments.ConnectionStatus;
-import io.guestgraph.connector.apaleo.ops.StatusDocuments.Counters;
-import io.guestgraph.connector.apaleo.ops.StatusDocuments.Run;
-import io.guestgraph.connector.apaleo.ops.StatusDocuments.RunStarted;
-import io.guestgraph.connector.apaleo.ops.StatusDocuments.Status;
-import io.guestgraph.connector.apaleo.ops.StatusDocuments.Subscription;
-import io.guestgraph.connector.apaleo.ops.StatusDocuments.SyncPoint;
 import io.guestgraph.connector.apaleo.persistence.entity.ConnectionEntity;
 import io.guestgraph.connector.apaleo.persistence.entity.SyncRunEntity;
 import io.guestgraph.connector.apaleo.persistence.repo.ConnectionRepo;
