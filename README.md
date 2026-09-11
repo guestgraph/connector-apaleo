@@ -1,4 +1,4 @@
-# connector-apaleo
+# GuestGraph — Apaleo Connector
 
 The Apaleo connector brings a hotel's reservations and bookings from Apaleo into the guest
 graph, as a client of the engine's REST API and nothing more: it reads Apaleo, submits
