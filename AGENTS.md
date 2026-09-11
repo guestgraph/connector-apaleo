@@ -59,7 +59,13 @@ a cache has no domain to map to. The pin names `connectionId` as the scope: ever
 method takes it or carries a justified `@ConnectionAgnostic`, because one instance serves many
 connections and the engine's tenant rule returns with the connection in the tenant's place.
 Packages are `io.guestgraph.connector.apaleo`, the family's root and the repository's name, with
-the endpoints, filters and error answers under `api`. A rule that every service needs changes in
+the endpoints, filters and error answers under `api`. A refusal is a `ServiceException` from the
+vendored package `io.guestgraph.service`, with its slug, status and title, thrown where the
+refusal is decided and written by the shared advice; the bearer guard and the size cap are the
+shared filters, configured under `service.bearer` and `service.max-request-bytes`. No problem
+detail, status exception, advice or filter answer is written here by hand, and the service
+check's `error-shape` item names the file that does; a new slug is added to the problems page
+on guestgraph.io before the connector answers it. A rule that every service needs changes in
 the shared repository, never here.
 
 ## Checks
