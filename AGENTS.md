@@ -14,6 +14,16 @@ says whether the copy matches the release, `sync` brings it to the release the p
 `sh conventions/conventions-check` holds this repository's own Markdown to `WRITING.md`. Edit
 a shared file in robertblust/conventions, never here.
 <!-- end conventions -->
+<!-- service-conventions · v0.2.0 -->
+The code-level rules of every guestgraph service on the Spring stack live in
+`service-conventions/`, vendored from guestgraph/service-conventions at the release
+`service-conventions.json` names: the parent build every `pom.xml` takes by path, the source rules,
+the architecture rules in `src/test/java/ServiceRulesTest.java`, the diagram script, the workflow
+in `.github/workflows/verify.yml`, and this block. `sh service-conventions/service-conventions-sync
+check` says whether the copy matches the release, `sync` brings it to the release the pin names.
+What every service has, whatever its stack, is `SERVICE.md` there. Edit a shared file in
+guestgraph/service-conventions, never here.
+<!-- end service-conventions -->
 
 # connector-apaleo — working conventions
 
@@ -35,7 +45,7 @@ sh conventions/conventions-check
 The engine's, unchanged: types are referenced by simple name with a proper import, never an
 inline fully qualified name, enforced by PMD in `verify`; formatting is google-java-format via
 Spotless; comments state constraints the code cannot show. ArchUnit in
-`PersistenceRulesTest` holds every repository to explicit `@Query` methods, bans the repository
+`ServiceRulesTest` holds every repository to explicit `@Query` methods, bans the repository
 scaffolding that would bypass them, bans ad-hoc EntityManager queries and JdbcClient, and
 confines JPA to the `persistence` package, laid out as the engine lays out its own: `entity` and
 `repo` beside each other, with no mapper layer because a cache has no domain to map to. Every
