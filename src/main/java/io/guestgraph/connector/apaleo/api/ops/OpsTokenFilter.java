@@ -15,10 +15,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Everything answers only to the bearer token from configuration (research R9), which is distinct
- * from any webhook secret, except the two paths that carry their own rule: the webhook endpoint,
- * whose secret is in its path, and health, which is for the platform. Closed by default, and the
- * two exceptions matched on the raw request path, so a matrix parameter or a percent-encoded
- * spelling of a guarded path is guarded too, whatever Spring later resolves it to.
+ * from any webhook secret, except the three paths that carry their own rule: the webhook endpoint,
+ * whose secret is in its path, health, which is for the platform, and the API document, which
+ * carries no data. Closed by default, and the two exceptions matched on the raw request path, so a
+ * matrix parameter or a percent-encoded spelling of a guarded path is guarded too, whatever Spring
+ * later resolves it to.
  */
 @Component
 public class OpsTokenFilter extends OncePerRequestFilter {
@@ -32,7 +33,9 @@ public class OpsTokenFilter extends OncePerRequestFilter {
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String path = request.getRequestURI();
-    return path.equals("/actuator/health") || path.startsWith("/apaleo/events/");
+    return path.equals("/actuator/health")
+        || path.equals("/api-docs")
+        || path.startsWith("/apaleo/events/");
   }
 
   @Override

@@ -1,0 +1,13 @@
+# The local profile's connection: the engine's demo tenant on this machine, and Apaleo values
+# that are placeholders, not credentials. Replace the three replace-me values with a sandbox
+# client's before expecting any Apaleo call to work; the connector starts without them.
+connections:
+  local:
+    tenantLabel: demo
+    engineBaseUrl: http://localhost:8080
+    engineApiKey: demo-key
+    apaleoAccount: replace-me
+    apaleoClientId: replace-me
+    apaleoClientSecret: replace-me
+    apaleoPropertyIds: []
+    webhookSecret: local-webhook-secret

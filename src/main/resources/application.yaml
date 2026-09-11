@@ -48,6 +48,9 @@ connector:
   events:
     # How often stored deliveries are drained: a change reaches the engine within this and one fetch.
     poll-interval: ${EVENT_POLL_INTERVAL:PT10S}
+  # A body larger than this is refused with a problem detail before anything reads it; an
+  # Apaleo event is a few hundred bytes.
+  max-request-bytes: ${MAX_REQUEST_BYTES:1048576}
   apaleo:
     # The three hosts a connection's client talks to; tests point them at a stub.
     identity-url: https://identity.apaleo.com
@@ -63,3 +66,16 @@ management:
     web:
       exposure:
         include: health
+
+---
+# The local profile: the engine's demo tenant on this machine and a sample connection with
+# placeholder Apaleo values, so the connector starts with nothing written by hand first.
+spring:
+  config:
+    activate:
+      on-profile: local
+connector:
+  public-url: http://localhost:8081
+  ops-token: local-ops-token
+  connections-file: config/connections-local.yaml
+  sync-on-boot: false
