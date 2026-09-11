@@ -1,5 +1,6 @@
 package io.guestgraph.connector.apaleo.api.events;
 
+import io.guestgraph.connector.apaleo.api.NotAnEventException;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
 import io.guestgraph.connector.apaleo.persistence.ObjectType;
@@ -10,8 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,11 +63,7 @@ public class EventEndpoint {
     }
     Optional<Delivery> delivery = Delivery.parse(body);
     if (delivery.isEmpty()) {
-      return ResponseEntity.of(
-              ProblemDetail.forStatusAndDetail(
-                  HttpStatus.BAD_REQUEST,
-                  "not an Apaleo event: id, topic and data.entityId are required"))
-          .build();
+      throw new NotAnEventException();
     }
     ConnectionConfig c = connection.get();
     Delivery d = delivery.get();

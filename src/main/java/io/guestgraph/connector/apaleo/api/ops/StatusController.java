@@ -1,5 +1,7 @@
 package io.guestgraph.connector.apaleo.api.ops;
 
+import io.guestgraph.connector.apaleo.api.NoSuchConnectionException;
+import io.guestgraph.connector.apaleo.api.NoSuchRunException;
 import io.guestgraph.connector.apaleo.api.events.Subscriptions;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.ConnectionStatus;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Counters;
@@ -20,24 +22,20 @@ import io.guestgraph.connector.apaleo.persistence.repo.SyncRunRepo;
 import io.guestgraph.connector.apaleo.sync.FullSync;
 import io.guestgraph.connector.apaleo.sync.Reconciliation;
 import io.guestgraph.connector.apaleo.sync.Refresh;
-import io.guestgraph.connector.apaleo.sync.RunInProgressException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * The operations surface of research R9: the status, one document for every configured connection,
- * and the runs an operator starts and reads. Behind {@link OpsTokenFilter}.
+ * and the runs an operator starts and reads. Behind the shared bearer token filter; a refusal is a
+ * problem of the family's shape, thrown here and written by the shared advice.
  */
 @RestController
 public class StatusController {
@@ -113,12 +111,9 @@ public class StatusController {
       id = UUID.fromString(runId);
     } catch (IllegalArgumentException e) {
       // The contract knows 404 only: an id that is no run id names no run.
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "no such run");
+      throw new NoSuchRunException();
     }
-    SyncRunEntity run =
-        syncRuns
-            .find(c.name(), id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "no such run"));
+    SyncRunEntity run = syncRuns.find(c.name(), id).orElseThrow(NoSuchRunException::new);
     return new Run(
         run.getId(),
         run.getKind(),
@@ -134,15 +129,8 @@ public class StatusController {
         run.getLastError());
   }
 
-  @ExceptionHandler(RunInProgressException.class)
-  public ProblemDetail runInProgress(RunInProgressException e) {
-    return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
-  }
-
   private ConnectionConfig connection(String connectionId) {
-    return connections
-        .byName(connectionId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "no such connection"));
+    return connections.byName(connectionId).orElseThrow(NoSuchConnectionException::new);
   }
 
   private static ResponseEntity<RunStarted> started(UUID runId) {

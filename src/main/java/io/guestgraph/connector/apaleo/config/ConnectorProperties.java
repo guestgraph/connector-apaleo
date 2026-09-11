@@ -17,7 +17,6 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "connector")
 public record ConnectorProperties(
     @NotBlank String publicUrl,
-    @NotBlank String opsToken,
     @NotNull Path connectionsFile,
     String engineSourceSystem,
     Apaleo apaleo,
@@ -43,7 +42,7 @@ public record ConnectorProperties(
   public String toString() {
     return "ConnectorProperties[publicUrl="
         + publicUrl
-        + ", opsToken=****, connectionsFile="
+        + ", connectionsFile="
         + connectionsFile
         + ", engineSourceSystem="
         + engineSourceSystem
