@@ -36,26 +36,34 @@ file says how to build and check, not what to build.
 ## Build and verify
 
 ```bash
-./mvnw verify              # tests (Testcontainers, needs Docker), ArchUnit, PMD, Spotless
-./mvnw spotless:apply      # fix formatting (google-java-format) — check fails otherwise
-sh conventions/conventions-check
+./mvnw verify                                        # tests (Testcontainers, needs Docker), the rules, PMD, Spotless
+./mvnw spotless:apply                                # fix formatting (google-java-format) — check fails otherwise
+sh service-conventions/regen-er                      # after a migration — CI checks diagram drift
+sh service-conventions/service-conventions-check     # what of the list every guestgraph service has this one lacks
+sh conventions/conventions-check                     # the prose
 ```
 
 ## Code conventions
 
-The engine's, unchanged: types are referenced by simple name with a proper import, never an
-inline fully qualified name, enforced by PMD in `verify`; formatting is google-java-format via
-Spotless; comments state constraints the code cannot show. ArchUnit in
-`ServiceRulesTest` holds every repository to explicit `@Query` methods, bans the repository
-scaffolding that would bypass them, bans ad-hoc EntityManager queries and JdbcClient, and
-confines JPA to the `persistence` package, laid out as the engine lays out its own: `entity` and
-`repo` beside each other, with no mapper layer because a cache has no domain to map to. Every
-repository method takes a `connectionId` parameter or carries a justified `@ConnectionAgnostic`:
-one instance serves many connections, so the engine's tenant rule returns with the connection in
-the tenant's place.
+Every guestgraph service's, vendored from guestgraph/service-conventions at the release
+`service-conventions.json` names: the parent build `pom.xml` takes by path carries PMD and
+Spotless, so types are referenced by simple name with a proper import, never an inline fully
+qualified name, and formatting is google-java-format; comments state constraints the code cannot
+show. The rules test in `src/test/java/ServiceRulesTest.java` holds every repository to explicit
+`@Query` methods, bans the repository scaffolding that would bypass them, bans ad-hoc
+EntityManager queries and JdbcClient, and confines JPA to the `persistence` package, laid out as
+the engine lays out its own: `entity` and `repo` beside each other, with no mapper layer because
+a cache has no domain to map to. The pin names `connectionId` as the scope: every repository
+method takes it or carries a justified `@ConnectionAgnostic`, because one instance serves many
+connections and the engine's tenant rule returns with the connection in the tenant's place.
+Packages are `io.guestgraph.connector.apaleo`, the family's root and the repository's name, with
+the endpoints, filters and error answers under `api`. A rule that every service needs changes in
+the shared repository, never here.
 
 ## Checks
 
-Two jobs, both required by the ruleset on `main`: `verify`, this repository's own, and
-`conventions`, called from robertblust/conventions at the pinned tag and shown by GitHub as
-`conventions / conventions`. The prose check leaves out `target`, build output.
+Four jobs, all required by the ruleset on `main`: `verify`, `er-drift` and `service-conventions`
+from the vendored workflow, the last holding the vendored copy to its release and the connector
+to the list every guestgraph service meets, and `conventions`, called from robertblust/conventions
+at the pinned tag and shown by GitHub as `conventions / conventions`. The prose check leaves out
+`target`, build output.
