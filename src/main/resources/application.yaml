@@ -1,41 +1,36 @@
+# What is the connector's own; everything every guestgraph service shares comes from the vendored
+# service-defaults.yaml, beneath this file and the environment.
 spring:
   application:
     name: connector-apaleo
-  threads:
-    virtual:
-      enabled: true
-  mvc:
-    problemdetails:
-      enabled: true
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/connector}
     username: ${DATABASE_USERNAME:apaleo_connector}
     password: ${DATABASE_PASSWORD:apaleo_connector}
-    hikari:
-      # One schema, one role (data-model "One schema, one role"): every pooled connection opens
-      # with this search path, so the connector touches nothing outside DATABASE_SCHEMA whether
-      # the database is the engine's or its own. The same shape the engine uses (its slice 6).
-      schema: ${DATABASE_SCHEMA:apaleo_connector}
-  flyway:
-    enabled: true
-    default-schema: ${DATABASE_SCHEMA:apaleo_connector}
-    create-schemas: true
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: validate
-  docker:
-    compose:
-      lifecycle-management: start_only
 
 server:
   port: 8081
+
+service:
+  # One schema, one role (data-model "One schema, one role"): every pooled connection opens with
+  # this search path, so the connector touches nothing outside it whether the database is the
+  # engine's or its own.
+  schema: apaleo_connector
+  bearer:
+    # Everything answers only to this token (research R9), which is distinct from any webhook
+    # secret, except the three paths that carry their own rule: the webhook endpoint, whose
+    # secret is in its path, health, which is for the platform, and the API document, which
+    # carries no data.
+    token: ${CONNECTOR_OPS_TOKEN}
+    open-paths:
+      - /actuator/health
+      - /api-docs
+      - /apaleo/events/
 
 # The instance's configuration (data-model "Configuration"). Connections and their secrets live
 # in the file connections-file names, never here and never in the database.
 connector:
   public-url: ${CONNECTOR_PUBLIC_URL:}
-  ops-token: ${CONNECTOR_OPS_TOKEN:}
   connections-file: ${CONNECTOR_CONNECTIONS_FILE:}
   engine-source-system: ${ENGINE_SOURCE_SYSTEM:apaleo}
   resync-after-gap: ${RESYNC_AFTER_GAP:PT24H}
@@ -48,9 +43,6 @@ connector:
   events:
     # How often stored deliveries are drained: a change reaches the engine within this and one fetch.
     poll-interval: ${EVENT_POLL_INTERVAL:PT10S}
-  # A body larger than this is refused with a problem detail before anything reads it; an
-  # Apaleo event is a few hundred bytes.
-  max-request-bytes: ${MAX_REQUEST_BYTES:1048576}
   apaleo:
     # The three hosts a connection's client talks to; tests point them at a stub.
     identity-url: https://identity.apaleo.com
@@ -61,12 +53,6 @@ connector:
     backoff-initial: PT1S
     backoff-max: PT1M
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-
 ---
 # The local profile: the engine's demo tenant on this machine and a sample connection with
 # placeholder Apaleo values, so the connector starts with nothing written by hand first.
@@ -74,8 +60,10 @@ spring:
   config:
     activate:
       on-profile: local
+service:
+  bearer:
+    token: local-ops-token
 connector:
   public-url: http://localhost:8081
-  ops-token: local-ops-token
   connections-file: config/connections-local.yaml
   sync-on-boot: false
