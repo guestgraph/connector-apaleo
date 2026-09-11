@@ -87,4 +87,12 @@ class ConnectionsTest {
         .doesNotContain("key-alpha")
         .doesNotContain("s3cret");
   }
+
+  @Test
+  @DisplayName("a missing file is named in quotes, so a stray space in the path shows")
+  void missingFileIsQuoted() {
+    assertThatThrownBy(() -> Connections.from(Path.of("/nowhere/connections.yaml ")))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("'/nowhere/connections.yaml '");
+  }
 }

@@ -53,7 +53,10 @@ public class ApaleoAuth {
             .retrieve()
             .toEntity(String.class);
     if (response.getStatusCode().isError() || response.getBody() == null) {
-      throw new ApaleoException("token", response.getStatusCode().value());
+      // The OAuth error code says why, in one word that carries no credential; the
+      // description beside it may name the client, so it stays out.
+      throw new ApaleoException(
+          "token" + errorCode(response.getBody()), response.getStatusCode().value());
     }
     Map<?, ?> answer;
     try {
@@ -68,5 +71,17 @@ public class ApaleoAuth {
     Object expiresIn = answer.get("expires_in");
     long seconds = expiresIn instanceof Number n ? n.longValue() : 3600;
     expiresAt = clock.instant().plusSeconds(seconds);
+  }
+
+  private static String errorCode(String body) {
+    if (body == null || body.isBlank()) {
+      return "";
+    }
+    try {
+      Object code = JSON.readValue(body, Map.class).get("error");
+      return code == null ? "" : " (" + code + ")";
+    } catch (RuntimeException e) {
+      return "";
+    }
   }
 }
