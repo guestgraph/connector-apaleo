@@ -1,12 +1,12 @@
-package io.guestgraph.connector.apaleo.events;
+package io.guestgraph.connector.apaleo.api.events;
 
 import io.guestgraph.connector.apaleo.apaleo.ApaleoClient;
 import io.guestgraph.connector.apaleo.apaleo.ApaleoClients;
 import io.guestgraph.connector.apaleo.apaleo.model.Reservation;
+import io.guestgraph.connector.apaleo.api.ops.LastErrors;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
 import io.guestgraph.connector.apaleo.config.ConnectorProperties;
-import io.guestgraph.connector.apaleo.ops.LastErrors;
 import io.guestgraph.connector.apaleo.persistence.ObjectType;
 import io.guestgraph.connector.apaleo.persistence.entity.ProcessedEventEntity;
 import io.guestgraph.connector.apaleo.persistence.repo.ConnectionRepo;

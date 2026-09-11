@@ -1,4 +1,4 @@
-package io.guestgraph.connector.apaleo.ops;
+package io.guestgraph.connector.apaleo.api.ops;
 
 import java.time.Instant;
 import java.util.List;

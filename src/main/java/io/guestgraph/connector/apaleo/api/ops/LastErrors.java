@@ -1,4 +1,4 @@
-package io.guestgraph.connector.apaleo.ops;
+package io.guestgraph.connector.apaleo.api.ops;
 
 import io.guestgraph.connector.apaleo.apaleo.ApaleoException;
 import io.guestgraph.connector.apaleo.engine.EngineException;

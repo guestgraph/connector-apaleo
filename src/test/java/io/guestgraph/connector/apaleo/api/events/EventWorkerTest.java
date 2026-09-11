@@ -1,4 +1,4 @@
-package io.guestgraph.connector.apaleo.events;
+package io.guestgraph.connector.apaleo.api.events;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

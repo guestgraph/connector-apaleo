@@ -1,4 +1,4 @@
-package io.guestgraph.connector.apaleo.events;
+package io.guestgraph.connector.apaleo.api.events;
 
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
