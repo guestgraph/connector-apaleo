@@ -40,8 +40,11 @@ say why.
 `src/main/resources/application.yaml`, and brings up the PostgreSQL of `compose.yaml` beside it,
 which it starts and does not stop. Three values have no default and must be set: `CONNECTOR_PUBLIC_URL`, the URL Apaleo
 posts to; `CONNECTOR_OPS_TOKEN`, the bearer token of the operations endpoints; and
-`CONNECTOR_CONNECTIONS_FILE`, the path of the connections file. Every other value has a default
-in `application.yaml`, and the “Configuration” section of the
+`CONNECTOR_CONNECTIONS_FILE`, the path of the connections file. The `local` profile,
+`./mvnw spring-boot:run -Dspring-boot.run.profiles=local`, sets all three for this machine and
+reads `config/connections-local.yaml`, a sample connection to the engine's demo tenant whose
+Apaleo values are placeholders to replace before any Apaleo call is expected to work. Every other
+value has a default in `application.yaml`, and the “Configuration” section of the
 [data model](https://github.com/guestgraph/engine/blob/main/specs/005-apaleo-connector/data-model.md#configuration)
 lists each property and what it means.
 
@@ -157,7 +160,8 @@ state the rule.
 
 ## Building and checking
 
-`./mvnw verify` runs the tests on Testcontainers, so it needs Docker, then ArchUnit, PMD and
-Spotless; `sh conventions/conventions-check` holds the prose to `conventions/WRITING.md`; and
-`AGENTS.md` says how to work here. Logs are plain text, and no credential and no person value
+`./mvnw verify` runs the tests on Testcontainers, so it needs Docker, then the architecture
+rules, PMD and Spotless; `sh service-conventions/service-conventions-check` says what of the list
+every guestgraph service has this one lacks; `sh conventions/conventions-check` holds the prose to
+`conventions/WRITING.md`; and `AGENTS.md` says how to work here. Logs are plain text, and no credential and no person value
 appears in them, in the status or in an error.

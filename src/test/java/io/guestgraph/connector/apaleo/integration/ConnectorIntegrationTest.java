@@ -121,6 +121,8 @@ public abstract class ConnectorIntegrationTest {
     registry.add("connector.events.poll-interval", () -> "PT1H");
     registry.add("connector.reconcile.interval", () -> "PT1H");
     registry.add("connector.refresh-cron", () -> "-");
+    // Small enough for a test to exceed; every recorded delivery is far below it.
+    registry.add("connector.max-request-bytes", () -> "4096");
     registry.add("connector.connections-file", () -> CONNECTIONS_FILE.toString());
     registry.add("connector.apaleo.identity-url", APALEO::baseUrl);
     registry.add("connector.apaleo.api-url", APALEO::baseUrl);
