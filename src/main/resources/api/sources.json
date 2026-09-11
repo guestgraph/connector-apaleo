@@ -1,1 +1,1 @@
-{ "connector-api.yaml": "guestgraph/engine@063e15b8611be9434f855b9db908200dac17b57b:specs/005-apaleo-connector/contracts/connector-api.yaml" }
+{ "sources": ["guestgraph/engine@aa34403b1839513d90125961c02c7d3b4a89cd5e:specs/005-apaleo-connector/contracts/connector-api.yaml"] }
