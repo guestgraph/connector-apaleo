@@ -14,13 +14,13 @@ import org.yaml.snakeyaml.Yaml;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-/** Spec 007 task T021: the contract the connector serves is the one it vendors. */
+/** Spec 007 task T021: the contract the connector serves is the one it generates. */
 class ApiDocsTest extends ConnectorIntegrationTest {
 
   private static final ObjectMapper JSON = new ObjectMapper();
 
   @Test
-  @DisplayName("GET /api-docs answers the vendored contract without the ops token")
+  @DisplayName("GET /api-docs answers the generated contract without the ops token")
   @SuppressWarnings("unchecked")
   void apiDocsServesTheContract() throws IOException {
     ResponseEntity<String> answer =
@@ -29,7 +29,7 @@ class ApiDocsTest extends ConnectorIntegrationTest {
     assertThat(answer.getStatusCode()).isEqualTo(HttpStatus.OK);
     JsonNode served = JSON.readTree(answer.getBody());
     Map<String, Object> contract =
-        new Yaml().load(Files.readString(Path.of("src/main/resources/api/connector-api.yaml")));
+        new Yaml().load(Files.readString(Path.of("src/main/resources/api/openapi.yaml")));
     Map<String, Object> paths = (Map<String, Object>) contract.get("paths");
     assertThat(served.get("paths").propertyNames())
         .containsExactlyInAnyOrderElementsOf(paths.keySet());
