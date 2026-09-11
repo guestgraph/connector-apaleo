@@ -8,11 +8,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
 import io.guestgraph.connector.apaleo.events.EventWorker;
+import io.guestgraph.connector.apaleo.persistence.entity.HeldGuestIdEntity;
 import io.guestgraph.connector.apaleo.persistence.entity.ProcessedEventEntity;
+import io.guestgraph.connector.apaleo.persistence.repo.HeldGuestIdRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.ObjectStateRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.ProcessedEventRepo;
 import io.guestgraph.connector.apaleo.testing.Recorded;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +23,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Spec 005 task T020: a delivery is stored first and answered, then processed once. */
 class EventTest extends ConnectorIntegrationTest {
+
+  private static final ObjectMapper JSON = new ObjectMapper();
 
   @Autowired EventWorker worker;
   @Autowired Connections connections;
   @Autowired ProcessedEventRepo events;
   @Autowired ObjectStateRepo objectStates;
+  @Autowired HeldGuestIdRepo heldGuestIds;
   @Autowired JdbcClient jdbc;
 
   @Test
@@ -200,6 +208,49 @@ class EventTest extends ConnectorIntegrationTest {
 
     assertThat(event(BETA, "ev-beta").getState()).isEqualTo("PENDING");
     assertThat(events.countPending(ALPHA.name())).isZero();
+  }
+
+  @Test
+  @DisplayName("a booking event names no property and is served under a configured property list")
+  void bookingEventNamesNoProperty() {
+    clean();
+    // As the sandbox delivers it (research R11 item 4): topic Booking, no propertyId at all.
+    String event =
+        """
+        {"topic":"Booking","type":"changed","id":"ev-booking-noprop","accountId":"ACME",
+         "timestamp":1789101336344,"data":{"entityId":"XPGMSXGF"}}
+        """;
+    stubBooking(ALPHA, "XPGMSXGF", "booking-example.json");
+
+    deliver(ALPHA.webhookSecret(), event);
+    worker.drain(alpha());
+
+    assertThat(event(ALPHA, "ev-booking-noprop").getState()).isEqualTo("DONE");
+    assertThat(objectStates.find(ALPHA.name(), "booking", "XPGMSXGF")).isPresent();
+  }
+
+  @Test
+  @DisplayName("a version that drops a person removes its held slot")
+  void droppedPersonLosesItsHeldSlot() {
+    clean();
+    stubBooking(ALPHA, "KLMNPQRS", "booking-distinct-booker.json");
+    stubReservation(ALPHA, "KLMNPQRS-1", "reservation-three-persons.json");
+    deliver(ALPHA.webhookSecret(), eventFor("reservation", "changed", "KLMNPQRS-1", "ev-three"));
+    worker.drain(alpha());
+    assertThat(heldGuestIds.findByObject(ALPHA.name(), "reservation", "KLMNPQRS-1")).hasSize(3);
+    ObjectNode later =
+        (ObjectNode) JSON.readTree(Recorded.document("reservation-three-persons.json"));
+    later.putArray("additionalGuests");
+    later.put("modified", "2026-09-12T10:00:00Z");
+    stubReservationBody(ALPHA, "KLMNPQRS-1", later.toString());
+
+    deliver(ALPHA.webhookSecret(), eventFor("reservation", "changed", "KLMNPQRS-1", "ev-one"));
+    worker.drain(alpha());
+
+    List<HeldGuestIdEntity> held =
+        heldGuestIds.findByObject(ALPHA.name(), "reservation", "KLMNPQRS-1");
+    assertThat(held).hasSize(1);
+    assertThat(held.getFirst().getKey().role()).isEqualTo("PRIMARY_GUEST");
   }
 
   private ConnectionConfig alpha() {

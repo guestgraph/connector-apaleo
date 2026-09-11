@@ -72,6 +72,19 @@ public interface HeldGuestIdRepo extends Repository<HeldGuestIdEntity, HeldGuest
       @Param("currentGuestIdsJson") String currentGuestIdsJson,
       @Param("at") Instant at);
 
+  /** A slot the latest version no longer has: the person left the object (FR-018). */
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query(
+      "delete from HeldGuestIdEntity h where h.key.connectionId = :connectionId"
+          + " and h.key.objectType = :objectType and h.key.objectId = :objectId"
+          + " and h.key.role = :role and h.key.position = :position")
+  int release(
+      @Param("connectionId") String connectionId,
+      @Param("objectType") String objectType,
+      @Param("objectId") String objectId,
+      @Param("role") String role,
+      @Param("position") int position);
+
   @Query(
       "select count(h) from HeldGuestIdEntity h where h.key.connectionId = :connectionId"
           + " and h.resolutionStatus in ('SPLIT', 'RETIRED')")
