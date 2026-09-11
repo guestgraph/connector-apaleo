@@ -86,7 +86,8 @@ public class Connections {
     try (InputStream in = Files.newInputStream(file)) {
       root = stringsOnly().load(in);
     } catch (IOException e) {
-      throw new IllegalStateException("Cannot read connections file " + file, e);
+      // Quoted, so a trailing space in the configured path is visible in the message.
+      throw new IllegalStateException("Cannot read connections file '" + file + "'", e);
     }
     Object entries = root == null ? null : root.get("connections");
     if (!(entries instanceof Map<?, ?> map) || map.isEmpty()) {

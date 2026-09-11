@@ -11,6 +11,7 @@ import io.guestgraph.connector.apaleo.engine.model.IngestResult;
 import io.guestgraph.connector.apaleo.mapping.ApaleoMapper;
 import io.guestgraph.connector.apaleo.mapping.RosterHash;
 import io.guestgraph.connector.apaleo.persistence.ObjectType;
+import io.guestgraph.connector.apaleo.persistence.entity.HeldGuestIdEntity;
 import io.guestgraph.connector.apaleo.persistence.entity.ObjectStateEntity;
 import io.guestgraph.connector.apaleo.persistence.repo.ConnectionRepo;
 import io.guestgraph.connector.apaleo.persistence.repo.HeldGuestIdRepo;
@@ -21,9 +22,11 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
@@ -176,6 +179,18 @@ public class ObjectSubmitter {
     if (errors > 0) {
       return new Outcome(Outcome.Kind.FAILED, batch.size(), duplicates, flagged, errors);
     }
+    // The held ids are the latest version's (FR-018): a slot this version no longer has is
+    // released, so a removed guest does not linger as if still on the object.
+    Set<String> slots = new HashSet<>();
+    for (IngestRecord record : batch) {
+      slots.add(slot(record.sourceObject().role(), record.sourceObject().position()));
+    }
+    for (HeldGuestIdEntity held : heldGuestIds.findByObject(c.name(), type.code(), objectId)) {
+      if (!slots.contains(slot(held.getKey().role(), held.getKey().position()))) {
+        heldGuestIds.release(
+            c.name(), type.code(), objectId, held.getKey().role(), held.getKey().position());
+      }
+    }
     objectStates.upsert(
         c.name(),
         type.code(),
@@ -223,5 +238,9 @@ public class ObjectSubmitter {
     } catch (DateTimeParseException e) {
       return Optional.empty();
     }
+  }
+
+  private static String slot(String role, Integer position) {
+    return role + ":" + (position == null ? 0 : position);
   }
 }

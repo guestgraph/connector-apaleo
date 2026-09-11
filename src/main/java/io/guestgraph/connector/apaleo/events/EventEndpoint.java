@@ -57,6 +57,11 @@ public class EventEndpoint {
     if (body == null || body.isBlank()) {
       return ResponseEntity.ok().build();
     }
+    if (Delivery.isSystemMessage(body)) {
+      // Apaleo's reachability check: topic "system", type "healthcheck", no entity (research R11
+      // item 4, sandbox). It is answered and not kept; a 2xx is what makes the subscription.
+      return ResponseEntity.ok().build();
+    }
     Optional<Delivery> delivery = Delivery.parse(body);
     if (delivery.isEmpty()) {
       return ResponseEntity.of(
@@ -68,9 +73,14 @@ public class EventEndpoint {
     ConnectionConfig c = connection.get();
     Delivery d = delivery.get();
     // Ignored, not pending: a property the connection does not serve, or a topic the worker has
-    // no fetch for, would otherwise be retried for ever.
+    // no fetch for, would otherwise be retried for ever. A booking event names no property, as
+    // the sandbox showed (research R11 item 4), and bookings are the account's, so it is served.
+    boolean propertyServed =
+        d.propertyId().isEmpty()
+            || c.apaleoPropertyIds().isEmpty()
+            || c.apaleoPropertyIds().contains(d.propertyId());
     boolean served =
-        (c.apaleoPropertyIds().isEmpty() || c.apaleoPropertyIds().contains(d.propertyId()))
+        propertyServed
             && (ObjectType.RESERVATION.code().equals(d.objectType())
                 || ObjectType.BOOKING.code().equals(d.objectType()));
     int inserted =
@@ -118,6 +128,16 @@ public class EventEndpoint {
       String eventType = type == null ? objectType : objectType + "/" + type;
       return Optional.of(
           new Delivery(id, eventType, objectType, entityId, propertyId == null ? "" : propertyId));
+    }
+
+    @SuppressWarnings("unchecked")
+    static boolean isSystemMessage(String body) {
+      try {
+        Map<String, Object> raw = JSON.readValue(body, Map.class);
+        return raw != null && "system".equalsIgnoreCase(text(raw.get("topic")));
+      } catch (JacksonException e) {
+        return false;
+      }
     }
 
     private static String text(Object value) {

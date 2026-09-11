@@ -8,6 +8,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
@@ -97,6 +98,22 @@ class ApaleoClientTest {
             slept::add,
             Duration.ofSeconds(1),
             Duration.ofSeconds(60));
+  }
+
+  @Test
+  @DisplayName("a refused token names the OAuth error code, which carries no secret")
+  void refusedTokenNamesTheErrorCode() {
+    APALEO.stubFor(
+        post(urlPathEqualTo("/connect/token"))
+            .willReturn(
+                aResponse()
+                    .withStatus(400)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("{\"error\":\"invalid_scope\",\"error_description\":\"x\"}")));
+
+    assertThatThrownBy(() -> client.getReservation("XPGMSXGF-1"))
+        .isInstanceOf(ApaleoException.class)
+        .hasMessage("token: Apaleo answered 400 (invalid_scope)");
   }
 
   @Test
