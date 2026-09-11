@@ -1,2 +1,0 @@
-{ "repo": "guestgraph/engine", "commit": "52db514185cdac2e8ef8aaec5ef094df72575341",
-  "files": { "api/connector-api.yaml": "specs/005-apaleo-connector/contracts/connector-api.yaml" } }

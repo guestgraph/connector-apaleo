@@ -35,7 +35,7 @@ public class ApiDocsController {
     Map<String, Object> paths = new LinkedHashMap<>();
     try {
       Resource[] resources =
-          new PathMatchingResourcePatternResolver().getResources("classpath:api-contracts/*.yaml");
+          new PathMatchingResourcePatternResolver().getResources("classpath:api/*.yaml");
       Yaml yaml = new Yaml();
       for (Resource resource : resources) {
         try (InputStream in = resource.getInputStream()) {
