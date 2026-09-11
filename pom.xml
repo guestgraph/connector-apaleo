@@ -7,7 +7,7 @@
   <parent>
     <groupId>io.guestgraph</groupId>
     <artifactId>service-parent</artifactId>
-    <version>0.3.0</version>
+    <version>0.4.0</version>
     <relativePath>service-conventions/pom.xml</relativePath>
   </parent>
 
@@ -93,19 +93,4 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-      <!-- The contract in api/, owned by the engine repository and pinned by api.json, is served at /api-docs. -->
-      <resource>
-        <directory>api</directory>
-        <includes>
-          <include>*.yaml</include>
-        </includes>
-        <targetPath>api-contracts</targetPath>
-      </resource>
-    </resources>
-  </build>
 </project>

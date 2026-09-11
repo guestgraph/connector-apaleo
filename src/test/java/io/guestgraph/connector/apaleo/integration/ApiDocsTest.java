@@ -29,7 +29,7 @@ class ApiDocsTest extends ConnectorIntegrationTest {
     assertThat(answer.getStatusCode()).isEqualTo(HttpStatus.OK);
     JsonNode served = JSON.readTree(answer.getBody());
     Map<String, Object> contract =
-        new Yaml().load(Files.readString(Path.of("api/connector-api.yaml")));
+        new Yaml().load(Files.readString(Path.of("src/main/resources/api/connector-api.yaml")));
     Map<String, Object> paths = (Map<String, Object>) contract.get("paths");
     assertThat(served.get("paths").propertyNames())
         .containsExactlyInAnyOrderElementsOf(paths.keySet());
