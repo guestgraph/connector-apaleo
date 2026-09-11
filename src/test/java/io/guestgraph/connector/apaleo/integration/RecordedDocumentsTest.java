@@ -33,7 +33,7 @@ class RecordedDocumentsTest {
           "booking-no-reservations.json");
 
   @Test
-  @DisplayName("every recorded document parses, and the reachability check is empty")
+  @DisplayName("every recorded document parses, and the reachability check is a system message")
   void everyDocumentParses() {
     for (String name :
         List.of(
@@ -47,7 +47,9 @@ class RecordedDocumentsTest {
     }
     SINGLE_RESERVATIONS.forEach(n -> assertThat(read(n).get("id").asString()).isNotBlank());
     SINGLE_BOOKINGS.forEach(n -> assertThat(read(n).get("id").asString()).isNotBlank());
-    assertThat(Recorded.document("event-reachability.json")).isEmpty();
+    // As Apaleo sent it to the sandbox walk (research R11 item 4): no entity, a topic of its own.
+    assertThat(read("event-reachability.json").get("topic").asString()).isEqualTo("system");
+    assertThat(read("event-reachability.json").has("data")).isFalse();
   }
 
   @Test

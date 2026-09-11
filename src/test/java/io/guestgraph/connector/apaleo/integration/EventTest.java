@@ -174,9 +174,18 @@ class EventTest extends ConnectorIntegrationTest {
   }
 
   @Test
-  @DisplayName("an empty body is the reachability check; a wrong secret is an unknown path")
+  @DisplayName("the reachability check is answered 200 and stored nowhere; a wrong secret is 404")
   void reachabilityAndWrongSecret() {
+    clean();
+    // Apaleo's check is a system document with no entity (sandbox finding, research R11 item 4);
+    // an empty body is answered the same way.
+    assertThat(
+            deliver(ALPHA.webhookSecret(), Recorded.document("event-reachability.json"))
+                .getStatusCode())
+        .isEqualTo(HttpStatus.OK);
     assertThat(deliver(ALPHA.webhookSecret(), "").getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(events.countPending(ALPHA.name())).isZero();
+    assertThat(events.find(ALPHA.name(), "2cb69fe4-bab4-49d2-b064-48ebd9e554b3")).isEmpty();
     assertThat(
             deliver("nobody", Recorded.document("event-reservation-changed.json")).getStatusCode())
         .isEqualTo(HttpStatus.NOT_FOUND);

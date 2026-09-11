@@ -57,6 +57,11 @@ public class EventEndpoint {
     if (body == null || body.isBlank()) {
       return ResponseEntity.ok().build();
     }
+    if (Delivery.isSystemMessage(body)) {
+      // Apaleo's reachability check: topic "system", type "healthcheck", no entity (research R11
+      // item 4, sandbox). It is answered and not kept; a 2xx is what makes the subscription.
+      return ResponseEntity.ok().build();
+    }
     Optional<Delivery> delivery = Delivery.parse(body);
     if (delivery.isEmpty()) {
       return ResponseEntity.of(
@@ -118,6 +123,16 @@ public class EventEndpoint {
       String eventType = type == null ? objectType : objectType + "/" + type;
       return Optional.of(
           new Delivery(id, eventType, objectType, entityId, propertyId == null ? "" : propertyId));
+    }
+
+    @SuppressWarnings("unchecked")
+    static boolean isSystemMessage(String body) {
+      try {
+        Map<String, Object> raw = JSON.readValue(body, Map.class);
+        return raw != null && "system".equalsIgnoreCase(text(raw.get("topic")));
+      } catch (JacksonException e) {
+        return false;
+      }
     }
 
     private static String text(Object value) {
