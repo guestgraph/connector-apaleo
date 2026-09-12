@@ -1,0 +1,41 @@
+# Vendored from guestgraph/service-conventions by service-conventions-sync; edited there, never here.
+#
+# Maven follows the parent a service's pom takes by relativePath, and that parent is vendored:
+# a bump written into the copy makes it differ from its release and the service-conventions job
+# refuses it. Everything the parent pins is therefore ignored here and bumped in the shared
+# repository, where `sh tests/run` holds this list to what the parent actually pins. Everything
+# a service declares for itself stays watched.
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "org.springframework.boot:spring-boot-starter-parent"
+      - dependency-name: "org.testcontainers:testcontainers-bom"
+      - dependency-name: "com.tngtech.archunit:archunit-junit5"
+      - dependency-name: "org.wiremock:wiremock-standalone"
+      - dependency-name: "org.apache.maven.plugins:maven-pmd-plugin"
+      - dependency-name: "com.diffplug.spotless:spotless-maven-plugin"
+      - dependency-name: "com.google.googlejavaformat:google-java-format"
+      - dependency-name: "org.codehaus.mojo:exec-maven-plugin"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
