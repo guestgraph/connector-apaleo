@@ -7,6 +7,19 @@ import java.util.UUID;
 /** The documents of the operations contract, {@code connector-api.yaml}. */
 public final class StatusDocuments {
 
+  /** What a removal answers (spec 009 contract): the state, and whether there was one to delete. */
+  public record SubscriptionRemoved(
+      String state,
+      String id,
+      List<String> eventTypes,
+      Instant checkedAt,
+      boolean removed,
+      String endpoint) {}
+
+  /** What a restore answers: the state alone, since there is nothing to report but it. */
+  public record SubscriptionState(
+      String state, String id, List<String> eventTypes, Instant checkedAt) {}
+
   private StatusDocuments() {}
 
   public record Status(List<ConnectionStatus> connections) {}

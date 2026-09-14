@@ -14,6 +14,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClient;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Spec 009: an operator takes a connection's subscription away before a teardown, and puts it back
@@ -21,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * assertion reads the stub's record of the request rather than the connector's own memory.
  */
 class SubscriptionLifecycleTest extends ConnectorIntegrationTest {
+
+  private static final ObjectMapper JSON = new ObjectMapper();
 
   @Autowired ApaleoClients apaleo;
   @Autowired Connections connections;
@@ -62,5 +68,139 @@ class SubscriptionLifecycleTest extends ConnectorIntegrationTest {
     assertThat(apaleo.webhooksFor(alpha()).find(endpointOf(ALPHA)))
         .get()
         .satisfies(s -> assertThat(s.id()).isEqualTo("sub-alpha"));
+  }
+
+  // --- the removal (user story 1) -------------------------------------------------------
+
+  @Test
+  @DisplayName("a removal deletes the subscription that names this connection")
+  void removalDeletes() {
+    stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+    stubDelete(ALPHA, "sub-alpha");
+
+    JsonNode body = removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+
+    assertThat(body.get("state").asString()).isEqualTo("REMOVED");
+    assertThat(body.get("removed").asBoolean()).isTrue();
+    assertThat(body.get("endpoint").asString()).isEqualTo(endpointOf(ALPHA));
+    APALEO.verify(
+        deleteRequestedFor(urlPathEqualTo("/v1/subscriptions/sub-alpha"))
+            .withHeader("Authorization", equalTo(ALPHA.bearer())));
+  }
+
+  @Test
+  @DisplayName("removing twice, or removing nothing, is success both times")
+  void removalIsIdempotent() {
+    stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+    stubDelete(ALPHA, "sub-alpha");
+    removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+
+    // Apaleo now lists none, as it would after the first delete.
+    stubSubscriptions(ALPHA, "[]");
+    JsonNode second = removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+    JsonNode third = removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+
+    for (JsonNode body : new JsonNode[] {second, third}) {
+      assertThat(body.get("state").asString()).isEqualTo("REMOVED");
+      assertThat(body.get("removed").asBoolean()).isFalse();
+      assertThat(body.get("endpoint").isNull()).isTrue();
+    }
+    APALEO.verify(1, deleteRequestedFor(urlPathEqualTo("/v1/subscriptions/sub-alpha")));
+  }
+
+  @Test
+  @DisplayName("a removal changes nothing else about the connection")
+  void removalTouchesNothingElse() {
+    stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+    stubDelete(ALPHA, "sub-alpha");
+    JsonNode before = connectionStatus("alpha");
+
+    removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+
+    JsonNode after = connectionStatus("alpha");
+    for (String field :
+        new String[] {"counters", "syncPoints", "pendingEvents", "splitsAwaitingPerson"}) {
+      assertThat(after.get(field)).as(field).isEqualTo(before.get(field));
+    }
+  }
+
+  @Test
+  @DisplayName("the refusals: no token, no such connection, and Apaleo saying no")
+  void removalRefusals() {
+    assertProblem(
+        connector()
+            .delete()
+            .uri("/connections/alpha/subscription")
+            .retrieve()
+            .toEntity(String.class),
+        401,
+        "unauthorized");
+    assertProblem(
+        ops().delete().uri("/connections/nope/subscription").retrieve().toEntity(String.class),
+        404,
+        "not-found");
+
+    stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+    APALEO.stubFor(
+        asConnection(delete(urlPathEqualTo("/v1/subscriptions/sub-alpha")), ALPHA)
+            .willReturn(aResponse().withStatus(500)));
+    assertProblem(
+        ops().delete().uri("/connections/alpha/subscription").retrieve().toEntity(String.class),
+        502,
+        "apaleo-unreachable");
+    // Nothing was reported removed that was not: Apaleo still holds it.
+    assertThat(apaleo.webhooksFor(alpha()).find(endpointOf(ALPHA))).isPresent();
+  }
+
+  @Test
+  @DisplayName("one connection's removal leaves another's subscription alone")
+  void removalIsPerConnection() {
+    stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+    stubSubscriptions(BETA, listingFor(BETA, "sub-beta"));
+    stubDelete(ALPHA, "sub-alpha");
+
+    removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+
+    APALEO.verify(0, deleteRequestedFor(urlPathEqualTo("/v1/subscriptions/sub-beta")));
+    assertThat(apaleo.webhooksFor(beta()).find(endpointOf(BETA))).isPresent();
+  }
+
+  // --- helpers --------------------------------------------------------------------------
+
+  private static void stubDelete(Connection c, String id) {
+    APALEO.stubFor(
+        asConnection(delete(urlPathEqualTo("/v1/subscriptions/" + id)), c)
+            .willReturn(aResponse().withStatus(204)));
+  }
+
+  private ConnectionConfig beta() {
+    return connections.byName(BETA.name()).orElseThrow();
+  }
+
+  private RestClient ops() {
+    return connector().mutate().defaultHeader("Authorization", "Bearer " + OPS_TOKEN).build();
+  }
+
+  private JsonNode removed(RestClient.RequestHeadersSpec<?> request, int status) {
+    ResponseEntity<String> response = request.retrieve().toEntity(String.class);
+    assertThat(response.getStatusCode().value()).isEqualTo(status);
+    return JSON.readTree(response.getBody());
+  }
+
+  private JsonNode connectionStatus(String name) {
+    JsonNode status = JSON.readTree(ops().get().uri("/status").retrieve().body(String.class));
+    for (JsonNode connection : status.get("connections")) {
+      if (name.equals(connection.get("id").asString())) {
+        return connection;
+      }
+    }
+    throw new AssertionError("no connection " + name + " in the status");
+  }
+
+  private void assertProblem(ResponseEntity<String> response, int status, String slug) {
+    assertThat(response.getStatusCode().value()).isEqualTo(status);
+    JsonNode problem = JSON.readTree(response.getBody());
+    assertThat(problem.get("type").asString()).isEqualTo("https://guestgraph.io/problems/#" + slug);
+    assertThat(problem.get("detail").asString()).isNotBlank();
   }
 }

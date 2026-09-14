@@ -117,6 +117,30 @@ public class Subscriptions {
     }
   }
 
+  /** What a removal did, so the caller can say whether there was anything to delete. */
+  public record Removal(Status status, boolean removed, String endpoint) {}
+
+  /**
+   * Takes this connection's subscription away in Apaleo (spec 009, FR-002). Finds it by this
+   * connection's endpoint, exactly as {@link #check} does, so a connector never deletes another
+   * connection's subscription on the same account. Nothing to delete is success: the request states
+   * the end state rather than the act (FR-003). Apaleo refusing propagates and is not recorded, so
+   * no removal is reported that did not happen (FR-011).
+   */
+  public Removal remove(ConnectionConfig c) {
+    List<String> events = properties.apaleo().eventTypes();
+    String endpoint = endpointOf(c);
+    Optional<ApaleoWebhooks.Subscription> found = apaleo.webhooksFor(c).find(endpoint);
+    found.ifPresent(subscription -> apaleo.webhooksFor(c).delete(subscription.id()));
+    Status status =
+        record(c, new Status(State.REMOVED, null, events, clock.instant(), "removed on request"));
+    log.info(
+        "Connection {}: subscription {}",
+        c.name(),
+        found.isPresent() ? "removed" : "was not there to remove");
+    return new Removal(status, found.isPresent(), found.map(x -> endpoint).orElse(null));
+  }
+
   /** Reads whether the subscription still exists, and records that. */
   public Status check(ConnectionConfig c) {
     List<String> events = properties.apaleo().eventTypes();

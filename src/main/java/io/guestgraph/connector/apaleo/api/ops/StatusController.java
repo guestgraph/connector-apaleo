@@ -1,5 +1,6 @@
 package io.guestgraph.connector.apaleo.api.ops;
 
+import io.guestgraph.connector.apaleo.api.ApaleoUnreachableException;
 import io.guestgraph.connector.apaleo.api.NoSuchConnectionException;
 import io.guestgraph.connector.apaleo.api.NoSuchRunException;
 import io.guestgraph.connector.apaleo.api.events.Subscriptions;
@@ -9,6 +10,7 @@ import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Run;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.RunStarted;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Status;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Subscription;
+import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.SubscriptionRemoved;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.SyncPoint;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -127,6 +130,30 @@ public class StatusController {
         run.getFlaggedForReview(),
         run.getErrors(),
         run.getLastError());
+  }
+
+  /**
+   * Takes a connection's subscription away in Apaleo, before a teardown or a tunnel goes down (spec
+   * 009). A statement of the end state: asking twice succeeds, and {@code removed} says whether
+   * there was one to delete. The absence lasts until a restore or a restart.
+   */
+  @DeleteMapping("/connections/{connectionId}/subscription")
+  public SubscriptionRemoved removeSubscription(@PathVariable String connectionId) {
+    ConnectionConfig c = connection(connectionId);
+    Subscriptions.Removal removal;
+    try {
+      removal = subscriptions.remove(c);
+    } catch (RuntimeException e) {
+      throw new ApaleoUnreachableException("the subscription was not removed: " + e.getMessage());
+    }
+    Subscriptions.Status status = removal.status();
+    return new SubscriptionRemoved(
+        status.state().name(),
+        status.id(),
+        status.eventTypes(),
+        status.checkedAt(),
+        removal.removed(),
+        removal.endpoint());
   }
 
   private ConnectionConfig connection(String connectionId) {
