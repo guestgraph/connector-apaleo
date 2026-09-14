@@ -105,6 +105,15 @@ and submits. A delivery that cannot be fetched or submitted keeps its reason and
 attempt time and is retried with backoff; it is never dropped, and the status counts it. A
 second delivery of the same event id is acknowledged and ignored.
 
+An operator can take a subscription away and put it back: `DELETE` and `PUT` on
+`/connections/{connectionId}/subscription`. Removal is how a deployment or a tunnel is torn down
+without leaving a subscription posting to an address that has stopped answering, and it states an
+end state, so asking twice succeeds and the answer says whether there was one to delete. **The
+absence lasts as long as the connector runs and no longer: a restart subscribes every configured
+connection again**, so an operator tearing down stops the connector before the tunnel. The status
+says `REMOVED` for a connection deliberately without one and `MISSING` for one whose subscription
+failed, which is the difference between a decision and a fault.
+
 Two runs cover what the webhooks miss. A reconciliation every `RECONCILE_INTERVAL`, fifteen
 minutes by default, lists the reservations modified since each property's sync point less
 `RECONCILE_OVERLAP`, submits what changed and confirms the subscription still exists. A full
@@ -128,6 +137,9 @@ Behind `Authorization: Bearer {CONNECTOR_OPS_TOKEN}`:
 - `GET /connections/{name}/runs/{runId}` reports the run's progress and outcome.
 - `POST /connections/{name}/refresh` re-reads the connection's held guest ids and answers 202
   with the run id.
+- `DELETE /connections/{name}/subscription` removes that connection's webhook subscription in
+  Apaleo and answers 200 saying whether there was one to delete and which endpoint it named; a
+  502 means Apaleo refused and nothing was removed. `PUT` on the same path creates it again.
 
 `/actuator/health` needs no token.
 
