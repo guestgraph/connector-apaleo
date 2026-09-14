@@ -11,6 +11,7 @@ import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.RunStarted;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Status;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.Subscription;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.SubscriptionRemoved;
+import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.SubscriptionState;
 import io.guestgraph.connector.apaleo.api.ops.StatusDocuments.SyncPoint;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -154,6 +156,21 @@ public class StatusController {
         status.checkedAt(),
         removal.removed(),
         removal.endpoint());
+  }
+
+  /**
+   * Puts a removed subscription back, the act the connector performs for every connection when it
+   * starts. The way back from a removal without editing configuration or restarting (spec 009).
+   */
+  @PutMapping("/connections/{connectionId}/subscription")
+  public SubscriptionState restoreSubscription(@PathVariable String connectionId) {
+    ConnectionConfig c = connection(connectionId);
+    Subscriptions.Status status = subscriptions.restore(c);
+    if (status.state() != Subscriptions.State.ACTIVE) {
+      throw new ApaleoUnreachableException("the subscription was not created: " + status.reason());
+    }
+    return new SubscriptionState(
+        status.state().name(), status.id(), status.eventTypes(), status.checkedAt());
   }
 
   private ConnectionConfig connection(String connectionId) {

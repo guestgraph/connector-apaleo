@@ -4,10 +4,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.guestgraph.connector.apaleo.apaleo.ApaleoClients;
+import io.guestgraph.connector.apaleo.api.events.Subscriptions;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
 import io.guestgraph.connector.apaleo.config.Connections;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +32,7 @@ class SubscriptionLifecycleTest extends ConnectorIntegrationTest {
 
   @Autowired ApaleoClients apaleo;
   @Autowired Connections connections;
+  @Autowired Subscriptions subscriptions;
 
   /** The subscription Apaleo holds for a connection, as its listing would carry it. */
   private static String listingFor(Connection c, String id) {
@@ -163,6 +166,84 @@ class SubscriptionLifecycleTest extends ConnectorIntegrationTest {
 
     APALEO.verify(0, deleteRequestedFor(urlPathEqualTo("/v1/subscriptions/sub-beta")));
     assertThat(apaleo.webhooksFor(beta()).find(endpointOf(BETA))).isPresent();
+  }
+
+  // --- housekeeping and the way back (user story 3) --------------------------------------
+
+  @Test
+  @DisplayName("a reconciliation leaves a removal alone and does not call it a fault")
+  void reconciliationLeavesARemovalAlone() {
+    stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+    stubDelete(ALPHA, "sub-alpha");
+    removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+    stubSubscriptions(ALPHA, "[]");
+    APALEO.resetRequests();
+
+    subscriptions.check(alpha());
+
+    assertThat(subscriptions.status(alpha()).state()).isEqualTo(Subscriptions.State.REMOVED);
+    APALEO.verify(0, postRequestedFor(urlPathEqualTo("/v1/subscriptions")));
+  }
+
+  @Test
+  @DisplayName("a subscription that reappeared is active, whatever was asked for")
+  void apaleosAnswerWins() {
+    stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+    stubDelete(ALPHA, "sub-alpha");
+    removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+
+    // Apaleo lists one again — somebody put it back, or the delete did not take.
+    subscriptions.check(alpha());
+
+    assertThat(subscriptions.status(alpha()).state()).isEqualTo(Subscriptions.State.ACTIVE);
+  }
+
+  @Test
+  @DisplayName("a restore creates the subscription again, without a restart")
+  void restoreCreates() {
+    stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+    stubDelete(ALPHA, "sub-alpha");
+    removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+    stubSubscriptions(ALPHA, "[]");
+    APALEO.resetRequests();
+
+    JsonNode body = removed(ops().put().uri("/connections/alpha/subscription"), 200);
+
+    assertThat(body.get("state").asString()).isEqualTo("ACTIVE");
+    assertThat(body.get("id").asString()).isNotBlank();
+    APALEO.verify(1, postRequestedFor(urlPathEqualTo("/v1/subscriptions")));
+  }
+
+  @Test
+  @DisplayName("a restore refuses the same three ways a removal does")
+  void restoreRefusals() {
+    assertProblem(
+        connector().put().uri("/connections/alpha/subscription").retrieve().toEntity(String.class),
+        401,
+        "unauthorized");
+    assertProblem(
+        ops().put().uri("/connections/nope/subscription").retrieve().toEntity(String.class),
+        404,
+        "not-found");
+
+    stubSubscriptionsFailure(ALPHA, 500);
+    assertProblem(
+        ops().put().uri("/connections/alpha/subscription").retrieve().toEntity(String.class),
+        502,
+        "apaleo-unreachable");
+  }
+
+  @Test
+  @DisplayName("a listing Apaleo could not give is not an empty listing")
+  void aFailedListingIsNotEmpty() {
+    stubSubscriptionsFailure(ALPHA, 500);
+
+    // A removal must not answer "there was nothing to remove" when Apaleo simply did not say.
+    assertProblem(
+        ops().delete().uri("/connections/alpha/subscription").retrieve().toEntity(String.class),
+        502,
+        "apaleo-unreachable");
+    APALEO.verify(0, postRequestedFor(urlPathEqualTo("/v1/subscriptions")));
   }
 
   // --- helpers --------------------------------------------------------------------------

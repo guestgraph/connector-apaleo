@@ -50,14 +50,21 @@ public class ApaleoWebhooks {
             .header("Authorization", "Bearer " + auth.token())
             .retrieve()
             .toEntity(String.class);
+    // Apaleo answers 204 when the account holds none, and 404 has been seen for the same
+    // (research R11 item 4). Both are "none", and both are answers.
     if (response.getStatusCode() == HttpStatus.NOT_FOUND
-        || response.getStatusCode() == HttpStatus.NO_CONTENT
-        || response.getBody() == null
-        || response.getBody().isBlank()) {
+        || response.getStatusCode() == HttpStatus.NO_CONTENT) {
       return List.of();
     }
+    // Before the empty-body shortcut, not after it: a 500 carries no body either, and reading
+    // that as "the account holds none" made a failed listing indistinguishable from an empty
+    // one. The connector would then create a second subscription, and a removal would report
+    // nothing to remove while Apaleo still held one (spec 009, FR-002 and FR-011).
     if (response.getStatusCode().isError()) {
       throw new ApaleoException("list subscriptions", response.getStatusCode().value());
+    }
+    if (response.getBody() == null || response.getBody().isBlank()) {
+      return List.of();
     }
     List<Map<String, Object>> raw = JSON.readValue(response.getBody(), List.class);
     return raw.stream().map(ApaleoWebhooks::subscription).toList();

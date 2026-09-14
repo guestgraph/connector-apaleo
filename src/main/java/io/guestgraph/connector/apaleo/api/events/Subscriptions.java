@@ -56,6 +56,10 @@ public class Subscriptions {
     public boolean active() {
       return state == State.ACTIVE;
     }
+
+    Status withCheckedAt(Instant now) {
+      return new Status(state, id, eventTypes, now, reason);
+    }
   }
 
   private final Connections connections;
@@ -141,12 +145,27 @@ public class Subscriptions {
     return new Removal(status, found.isPresent(), found.map(x -> endpoint).orElse(null));
   }
 
+  /**
+   * Creates the subscription again after a removal, which is what {@link #ensure} does; the name
+   * says what an operator is doing rather than what the connector does at start (spec 009, FR-010).
+   */
+  public Status restore(ConnectionConfig c) {
+    return ensure(c);
+  }
+
   /** Reads whether the subscription still exists, and records that. */
   public Status check(ConnectionConfig c) {
     List<String> events = properties.apaleo().eventTypes();
     try {
       Optional<ApaleoWebhooks.Subscription> found = apaleo.webhooksFor(c).find(endpointOf(c));
       if (found.isEmpty()) {
+        // A connection whose subscription an operator removed is in the state they chose, not in
+        // a fault (spec 009, FR-007). Warning about it every reconciliation would teach an
+        // operator to ignore the line that matters.
+        if (statuses.get(c.name()) instanceof Status previous
+            && previous.state() == State.REMOVED) {
+          return record(c, previous.withCheckedAt(clock.instant()));
+        }
         log.warn("Connection {}: no subscription names this connector", c.name());
         return record(
             c, new Status(State.MISSING, null, events, clock.instant(), "no subscription found"));
