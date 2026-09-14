@@ -7,6 +7,19 @@ import java.util.UUID;
 /** The documents of the operations contract, {@code connector-api.yaml}. */
 public final class StatusDocuments {
 
+  /** What a removal answers (spec 009 contract): the state, and whether there was one to delete. */
+  public record SubscriptionRemoved(
+      String state,
+      String id,
+      List<String> eventTypes,
+      Instant checkedAt,
+      boolean removed,
+      String endpoint) {}
+
+  /** What a restore answers: the state alone, since there is nothing to report but it. */
+  public record SubscriptionState(
+      String state, String id, List<String> eventTypes, Instant checkedAt) {}
+
   private StatusDocuments() {}
 
   public record Status(List<ConnectionStatus> connections) {}
@@ -25,7 +38,12 @@ public final class StatusDocuments {
       Instant lastRefreshAt,
       LastErrors.LastError lastError) {}
 
-  public record Subscription(boolean active, String id, List<String> eventTypes) {}
+  /**
+   * {@code state} tells a connection deliberately without a subscription from one whose creation
+   * failed (spec 009); {@code active} is the boolean this document has carried since slice 5 and
+   * stays for every reader that already knows it.
+   */
+  public record Subscription(boolean active, String state, String id, List<String> eventTypes) {}
 
   public record SyncPoint(
       String propertyId,

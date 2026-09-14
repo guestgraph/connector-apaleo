@@ -31,9 +31,36 @@ public class Subscriptions {
 
   private static final Logger log = LoggerFactory.getLogger(Subscriptions.class);
 
+  /**
+   * What a connection's subscription is, as last seen or as last asked for (spec 009, data-model).
+   * A boolean could not tell a connection deliberately without a subscription from one whose
+   * creation failed, and the two want opposite reactions: the first is a deployment in the state
+   * its operator chose, the second is a fault worth a warning line.
+   */
+  public enum State {
+    /** Apaleo holds a subscription naming this connection's endpoint. */
+    ACTIVE,
+    /** Apaleo holds none and nobody asked for that. */
+    MISSING,
+    /** Apaleo holds none because an operator asked. Lost on restart, by design. */
+    REMOVED,
+    /** Not read yet, or the last read failed. */
+    UNKNOWN
+  }
+
   /** As last seen; {@code reason} carries why it is not active, never a payload. */
   public record Status(
-      boolean active, String id, List<String> eventTypes, Instant checkedAt, String reason) {}
+      State state, String id, List<String> eventTypes, Instant checkedAt, String reason) {
+
+    /** Kept because the status document has published it since slice 5. */
+    public boolean active() {
+      return state == State.ACTIVE;
+    }
+
+    Status withCheckedAt(Instant now) {
+      return new Status(state, id, eventTypes, now, reason);
+    }
+  }
 
   private final Connections connections;
   private final ApaleoClients apaleo;
@@ -86,12 +113,44 @@ public class Subscriptions {
                   c.apaleoPropertyIds(),
                   url -> url != null && url.startsWith(prefix) && !others.contains(url));
       log.info("Connection {}: subscription {} in place", c.name(), subscription.id());
-      return record(c, new Status(true, subscription.id(), events, clock.instant(), null));
+      return record(c, new Status(State.ACTIVE, subscription.id(), events, clock.instant(), null));
     } catch (RuntimeException e) {
       log.error("Connection {}: subscription could not be made: {}", c.name(), e.getMessage());
       lastErrors.record(c.name(), e, LastErrors.Where.APALEO);
-      return record(c, new Status(false, null, events, clock.instant(), e.getMessage()));
+      return record(c, new Status(State.MISSING, null, events, clock.instant(), e.getMessage()));
     }
+  }
+
+  /** What a removal did, so the caller can say whether there was anything to delete. */
+  public record Removal(Status status, boolean removed, String endpoint) {}
+
+  /**
+   * Takes this connection's subscription away in Apaleo (spec 009, FR-002). Finds it by this
+   * connection's endpoint, exactly as {@link #check} does, so a connector never deletes another
+   * connection's subscription on the same account. Nothing to delete is success: the request states
+   * the end state rather than the act (FR-003). Apaleo refusing propagates and is not recorded, so
+   * no removal is reported that did not happen (FR-011).
+   */
+  public Removal remove(ConnectionConfig c) {
+    List<String> events = properties.apaleo().eventTypes();
+    String endpoint = endpointOf(c);
+    Optional<ApaleoWebhooks.Subscription> found = apaleo.webhooksFor(c).find(endpoint);
+    found.ifPresent(subscription -> apaleo.webhooksFor(c).delete(subscription.id()));
+    Status status =
+        record(c, new Status(State.REMOVED, null, events, clock.instant(), "removed on request"));
+    log.info(
+        "Connection {}: subscription {}",
+        c.name(),
+        found.isPresent() ? "removed" : "was not there to remove");
+    return new Removal(status, found.isPresent(), found.map(x -> endpoint).orElse(null));
+  }
+
+  /**
+   * Creates the subscription again after a removal, which is what {@link #ensure} does; the name
+   * says what an operator is doing rather than what the connector does at start (spec 009, FR-010).
+   */
+  public Status restore(ConnectionConfig c) {
+    return ensure(c);
   }
 
   /** Reads whether the subscription still exists, and records that. */
@@ -100,21 +159,29 @@ public class Subscriptions {
     try {
       Optional<ApaleoWebhooks.Subscription> found = apaleo.webhooksFor(c).find(endpointOf(c));
       if (found.isEmpty()) {
+        // A connection whose subscription an operator removed is in the state they chose, not in
+        // a fault (spec 009, FR-007). Warning about it every reconciliation would teach an
+        // operator to ignore the line that matters.
+        if (statuses.get(c.name()) instanceof Status previous
+            && previous.state() == State.REMOVED) {
+          return record(c, previous.withCheckedAt(clock.instant()));
+        }
         log.warn("Connection {}: no subscription names this connector", c.name());
-        return record(c, new Status(false, null, events, clock.instant(), "no subscription found"));
+        return record(
+            c, new Status(State.MISSING, null, events, clock.instant(), "no subscription found"));
       }
-      return record(c, new Status(true, found.get().id(), events, clock.instant(), null));
+      return record(c, new Status(State.ACTIVE, found.get().id(), events, clock.instant(), null));
     } catch (RuntimeException e) {
       log.warn("Connection {}: subscription could not be read: {}", c.name(), e.getMessage());
       lastErrors.record(c.name(), e, LastErrors.Where.APALEO);
-      return record(c, new Status(false, null, events, clock.instant(), e.getMessage()));
+      return record(c, new Status(State.UNKNOWN, null, events, clock.instant(), e.getMessage()));
     }
   }
 
   public Status status(ConnectionConfig c) {
     return statuses.getOrDefault(
         c.name(),
-        new Status(false, null, properties.apaleo().eventTypes(), null, "not checked yet"));
+        new Status(State.UNKNOWN, null, properties.apaleo().eventTypes(), null, "not checked yet"));
   }
 
   /** The URL Apaleo posts to: the public URL, the fixed path and the connection's secret. */

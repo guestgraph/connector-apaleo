@@ -50,14 +50,21 @@ public class ApaleoWebhooks {
             .header("Authorization", "Bearer " + auth.token())
             .retrieve()
             .toEntity(String.class);
+    // Apaleo answers 204 when the account holds none, and 404 has been seen for the same
+    // (research R11 item 4). Both are "none", and both are answers.
     if (response.getStatusCode() == HttpStatus.NOT_FOUND
-        || response.getStatusCode() == HttpStatus.NO_CONTENT
-        || response.getBody() == null
-        || response.getBody().isBlank()) {
+        || response.getStatusCode() == HttpStatus.NO_CONTENT) {
       return List.of();
     }
+    // Before the empty-body shortcut, not after it: a 500 carries no body either, and reading
+    // that as "the account holds none" made a failed listing indistinguishable from an empty
+    // one. The connector would then create a second subscription, and a removal would report
+    // nothing to remove while Apaleo still held one (spec 009, FR-002 and FR-011).
     if (response.getStatusCode().isError()) {
       throw new ApaleoException("list subscriptions", response.getStatusCode().value());
+    }
+    if (response.getBody() == null || response.getBody().isBlank()) {
+      return List.of();
     }
     List<Map<String, Object>> raw = JSON.readValue(response.getBody(), List.class);
     return raw.stream().map(ApaleoWebhooks::subscription).toList();
@@ -112,6 +119,24 @@ public class ApaleoWebhooks {
       throw new ApaleoException("replace subscription", response.getStatusCode().value());
     }
     return new Subscription(current.id(), endpointUrl, events, propertyIds);
+  }
+
+  /**
+   * Deletes one subscription by its id. Apaleo's account-wide client can delete any subscription
+   * the account holds, so the caller decides which one is this connection's; {@link #find} is how,
+   * and nothing here guesses. A refusal is raised rather than swallowed: an operator must never be
+   * told a subscription is gone when Apaleo still holds it (spec 009, FR-002 and FR-011).
+   */
+  public void delete(String id) {
+    ResponseEntity<String> response =
+        api.delete()
+            .uri(PATH + "/" + id)
+            .header("Authorization", "Bearer " + auth.token())
+            .retrieve()
+            .toEntity(String.class);
+    if (response.getStatusCode().isError()) {
+      throw new ApaleoException("delete subscription", response.getStatusCode().value());
+    }
   }
 
   /** The subscription naming the endpoint; a listing Apaleo cannot give holds none. */

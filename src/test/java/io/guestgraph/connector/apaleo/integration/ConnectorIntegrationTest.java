@@ -290,7 +290,8 @@ public abstract class ConnectorIntegrationTest {
     }
   }
 
-  private static MappingBuilder asConnection(MappingBuilder builder, Connection c) {
+  /** Any stub, narrowed to one connection's bearer token, so two connections never share one. */
+  protected static MappingBuilder asConnection(MappingBuilder builder, Connection c) {
     return builder.withHeader("Authorization", equalTo(c.bearer()));
   }
 
