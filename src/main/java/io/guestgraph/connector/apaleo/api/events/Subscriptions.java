@@ -31,9 +31,32 @@ public class Subscriptions {
 
   private static final Logger log = LoggerFactory.getLogger(Subscriptions.class);
 
+  /**
+   * What a connection's subscription is, as last seen or as last asked for (spec 009, data-model).
+   * A boolean could not tell a connection deliberately without a subscription from one whose
+   * creation failed, and the two want opposite reactions: the first is a deployment in the state
+   * its operator chose, the second is a fault worth a warning line.
+   */
+  public enum State {
+    /** Apaleo holds a subscription naming this connection's endpoint. */
+    ACTIVE,
+    /** Apaleo holds none and nobody asked for that. */
+    MISSING,
+    /** Apaleo holds none because an operator asked. Lost on restart, by design. */
+    REMOVED,
+    /** Not read yet, or the last read failed. */
+    UNKNOWN
+  }
+
   /** As last seen; {@code reason} carries why it is not active, never a payload. */
   public record Status(
-      boolean active, String id, List<String> eventTypes, Instant checkedAt, String reason) {}
+      State state, String id, List<String> eventTypes, Instant checkedAt, String reason) {
+
+    /** Kept because the status document has published it since slice 5. */
+    public boolean active() {
+      return state == State.ACTIVE;
+    }
+  }
 
   private final Connections connections;
   private final ApaleoClients apaleo;
@@ -86,11 +109,11 @@ public class Subscriptions {
                   c.apaleoPropertyIds(),
                   url -> url != null && url.startsWith(prefix) && !others.contains(url));
       log.info("Connection {}: subscription {} in place", c.name(), subscription.id());
-      return record(c, new Status(true, subscription.id(), events, clock.instant(), null));
+      return record(c, new Status(State.ACTIVE, subscription.id(), events, clock.instant(), null));
     } catch (RuntimeException e) {
       log.error("Connection {}: subscription could not be made: {}", c.name(), e.getMessage());
       lastErrors.record(c.name(), e, LastErrors.Where.APALEO);
-      return record(c, new Status(false, null, events, clock.instant(), e.getMessage()));
+      return record(c, new Status(State.MISSING, null, events, clock.instant(), e.getMessage()));
     }
   }
 
@@ -101,20 +124,21 @@ public class Subscriptions {
       Optional<ApaleoWebhooks.Subscription> found = apaleo.webhooksFor(c).find(endpointOf(c));
       if (found.isEmpty()) {
         log.warn("Connection {}: no subscription names this connector", c.name());
-        return record(c, new Status(false, null, events, clock.instant(), "no subscription found"));
+        return record(
+            c, new Status(State.MISSING, null, events, clock.instant(), "no subscription found"));
       }
-      return record(c, new Status(true, found.get().id(), events, clock.instant(), null));
+      return record(c, new Status(State.ACTIVE, found.get().id(), events, clock.instant(), null));
     } catch (RuntimeException e) {
       log.warn("Connection {}: subscription could not be read: {}", c.name(), e.getMessage());
       lastErrors.record(c.name(), e, LastErrors.Where.APALEO);
-      return record(c, new Status(false, null, events, clock.instant(), e.getMessage()));
+      return record(c, new Status(State.UNKNOWN, null, events, clock.instant(), e.getMessage()));
     }
   }
 
   public Status status(ConnectionConfig c) {
     return statuses.getOrDefault(
         c.name(),
-        new Status(false, null, properties.apaleo().eventTypes(), null, "not checked yet"));
+        new Status(State.UNKNOWN, null, properties.apaleo().eventTypes(), null, "not checked yet"));
   }
 
   /** The URL Apaleo posts to: the public URL, the fixed path and the connection's secret. */

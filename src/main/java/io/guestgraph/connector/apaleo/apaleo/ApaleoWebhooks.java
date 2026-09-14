@@ -114,6 +114,24 @@ public class ApaleoWebhooks {
     return new Subscription(current.id(), endpointUrl, events, propertyIds);
   }
 
+  /**
+   * Deletes one subscription by its id. Apaleo's account-wide client can delete any subscription
+   * the account holds, so the caller decides which one is this connection's; {@link #find} is how,
+   * and nothing here guesses. A refusal is raised rather than swallowed: an operator must never be
+   * told a subscription is gone when Apaleo still holds it (spec 009, FR-002 and FR-011).
+   */
+  public void delete(String id) {
+    ResponseEntity<String> response =
+        api.delete()
+            .uri(PATH + "/" + id)
+            .header("Authorization", "Bearer " + auth.token())
+            .retrieve()
+            .toEntity(String.class);
+    if (response.getStatusCode().isError()) {
+      throw new ApaleoException("delete subscription", response.getStatusCode().value());
+    }
+  }
+
   /** The subscription naming the endpoint; a listing Apaleo cannot give holds none. */
   public Optional<Subscription> find(String endpointUrl) {
     return list().stream().filter(s -> endpointUrl.equals(s.endpointUrl())).findFirst();
