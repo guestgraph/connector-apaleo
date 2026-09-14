@@ -38,7 +38,12 @@ public final class StatusDocuments {
       Instant lastRefreshAt,
       LastErrors.LastError lastError) {}
 
-  public record Subscription(boolean active, String id, List<String> eventTypes) {}
+  /**
+   * {@code state} tells a connection deliberately without a subscription from one whose creation
+   * failed (spec 009); {@code active} is the boolean this document has carried since slice 5 and
+   * stays for every reader that already knows it.
+   */
+  public record Subscription(boolean active, String state, String id, List<String> eventTypes) {}
 
   public record SyncPoint(
       String propertyId,

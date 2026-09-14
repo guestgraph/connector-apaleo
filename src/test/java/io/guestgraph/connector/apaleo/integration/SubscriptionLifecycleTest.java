@@ -8,6 +8,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import io.guestgraph.connector.apaleo.apaleo.ApaleoClients;
 import io.guestgraph.connector.apaleo.api.events.Subscriptions;
 import io.guestgraph.connector.apaleo.config.ConnectionConfig;
@@ -15,6 +18,7 @@ import io.guestgraph.connector.apaleo.config.Connections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
@@ -244,6 +248,47 @@ class SubscriptionLifecycleTest extends ConnectorIntegrationTest {
         502,
         "apaleo-unreachable");
     APALEO.verify(0, postRequestedFor(urlPathEqualTo("/v1/subscriptions")));
+  }
+
+  // --- the status and the log (user story 2) ---------------------------------------------
+
+  @Test
+  @DisplayName("the status tells a teardown from a subscription that failed to be made")
+  void statusDistinguishesTheTwo() {
+    stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+    stubDelete(ALPHA, "sub-alpha");
+    removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+
+    // Beta's creation fails, which is the other way to end with no subscription.
+    stubSubscriptionsFailure(BETA, 500);
+    subscriptions.ensure(beta());
+
+    assertThat(connectionStatus("alpha").get("subscription").get("state").asString())
+        .isEqualTo("REMOVED");
+    assertThat(connectionStatus("beta").get("subscription").get("state").asString())
+        .isEqualTo("MISSING");
+    // active stays what it has been since slice 5: false for both.
+    assertThat(connectionStatus("alpha").get("subscription").get("active").asBoolean()).isFalse();
+  }
+
+  @Test
+  @DisplayName("a removal is in the log, naming the connection and no secret")
+  void removalIsLogged() {
+    ListAppender<ILoggingEvent> capture = new ListAppender<>();
+    capture.start();
+    Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+    root.addAppender(capture);
+    try {
+      stubSubscriptions(ALPHA, listingFor(ALPHA, "sub-alpha"));
+      stubDelete(ALPHA, "sub-alpha");
+      removed(ops().delete().uri("/connections/alpha/subscription"), 200);
+    } finally {
+      root.detachAppender(capture);
+    }
+    String log =
+        String.join("\n", capture.list.stream().map(ILoggingEvent::getFormattedMessage).toList());
+    assertThat(log).contains("Connection alpha: subscription removed");
+    assertThat(log).doesNotContain(ALPHA.webhookSecret(), ALPHA.clientSecret(), OPS_TOKEN);
   }
 
   // --- helpers --------------------------------------------------------------------------

@@ -199,7 +199,11 @@ public class StatusController {
         c.tenantLabel(),
         c.apaleoAccount(),
         c.apaleoPropertyIds(),
-        new Subscription(subscription.active(), subscription.id(), subscription.eventTypes()),
+        new Subscription(
+            subscription.active(),
+            subscription.state().name(),
+            subscription.id(),
+            subscription.eventTypes()),
         points,
         row == null ? null : row.getLastActivityAt(),
         row == null
