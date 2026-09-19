@@ -1,4 +1,4 @@
-<!-- conventions · v1.17.0 -->
+<!-- conventions · v1.19.0 -->
 Shared conventions of the robertblust, guestgraph and companygraph organizations live in
 `conventions/`, vendored from robertblust/conventions at the release `conventions.json`
 names. Read them before writing or committing anything here.
@@ -11,8 +11,9 @@ names. Read them before writing or committing anything here.
 
 Everything below this block is this repository's own. `sh conventions/conventions-sync check`
 says whether the copy matches the release, `sync` brings it to the release the pin names, and
-`sh conventions/conventions-check` holds this repository's own Markdown to `WRITING.md`. Edit
-a shared file in robertblust/conventions, never here.
+`sh conventions/conventions-check` holds this repository's own Markdown to `WRITING.md`, and
+`sh conventions/conventions-format` to its one form, which `fix` writes. Edit a shared file in
+robertblust/conventions, never here.
 <!-- end conventions -->
 <!-- service-conventions · v0.9.0 -->
 The code-level rules of every guestgraph service on the Spring stack live in
