@@ -15,10 +15,7 @@ The code-level rules of every guestgraph service on the Spring stack live in `se
 
 # connector-apaleo — working conventions
 
-The Apaleo connector: reservations and bookings from an Apaleo account into the guest graph, as
-a client of the engine's REST API. It is specified in the engine repository, under
-`specs/005-apaleo-connector/`, and that specification is the owner of every decision here: this
-file says how to build and check, not what to build.
+The Apaleo connector: reservations and bookings from an Apaleo account into the guest graph, as a client of the engine's REST API. It is specified in the engine repository, under `specs/005-apaleo-connector/`, and that specification is the owner of every decision here: this file says how to build and check, not what to build.
 
 ## Build and verify
 
@@ -32,31 +29,8 @@ sh conventions/conventions-check                     # the prose
 
 ## Code conventions
 
-Every guestgraph service's, vendored from guestgraph/service-conventions at the release
-`service-conventions.json` names: the parent build `pom.xml` takes by path carries PMD and
-Spotless, so types are referenced by simple name with a proper import, never an inline fully
-qualified name, and formatting is google-java-format; comments state constraints the code cannot
-show. The rules test in `src/test/java/ServiceRulesTest.java` holds every repository to explicit
-`@Query` methods, bans the repository scaffolding that would bypass them, bans ad-hoc
-EntityManager queries and JdbcClient, and confines JPA to the `persistence` package, laid out as
-the engine lays out its own: `entity` and `repo` beside each other, with no mapper layer because
-a cache has no domain to map to. The pin names `connectionId` as the scope: every repository
-method takes it or carries a justified `@ConnectionAgnostic`, because one instance serves many
-connections and the engine's tenant rule returns with the connection in the tenant's place.
-Packages are `io.guestgraph.connector.apaleo`, the family's root and the repository's name, with
-the endpoints, filters and error answers under `api`. A refusal is a `ServiceException` from the
-vendored package `io.guestgraph.service`, with its slug, status and title, thrown where the
-refusal is decided and written by the shared advice; the bearer guard and the size cap are the
-shared filters, configured under `service.bearer` and `service.max-request-bytes`. No problem
-detail, status exception, advice or filter answer is written here by hand, and the service
-check's `error-shape` item names the file that does; a new slug is added to the problems page
-on guestgraph.io before the connector answers it. A rule that every service needs changes in
-the shared repository, never here.
+Every guestgraph service's, vendored from guestgraph/service-conventions at the release `service-conventions.json` names: the parent build `pom.xml` takes by path carries PMD and Spotless, so types are referenced by simple name with a proper import, never an inline fully qualified name, and formatting is google-java-format; comments state constraints the code cannot show. The rules test in `src/test/java/ServiceRulesTest.java` holds every repository to explicit `@Query` methods, bans the repository scaffolding that would bypass them, bans ad-hoc EntityManager queries and JdbcClient, and confines JPA to the `persistence` package, laid out as the engine lays out its own: `entity` and `repo` beside each other, with no mapper layer because a cache has no domain to map to. The pin names `connectionId` as the scope: every repository method takes it or carries a justified `@ConnectionAgnostic`, because one instance serves many connections and the engine's tenant rule returns with the connection in the tenant's place. Packages are `io.guestgraph.connector.apaleo`, the family's root and the repository's name, with the endpoints, filters and error answers under `api`. A refusal is a `ServiceException` from the vendored package `io.guestgraph.service`, with its slug, status and title, thrown where the refusal is decided and written by the shared advice; the bearer guard and the size cap are the shared filters, configured under `service.bearer` and `service.max-request-bytes`. No problem detail, status exception, advice or filter answer is written here by hand, and the service check's `error-shape` item names the file that does; a new slug is added to the problems page on guestgraph.io before the connector answers it. A rule that every service needs changes in the shared repository, never here.
 
 ## Checks
 
-Four jobs, all required by the ruleset on `main`: `verify`, `er-drift` and `service-conventions`
-from the vendored workflow, the last holding the vendored copy to its release and the connector
-to the list every guestgraph service meets, and `conventions`, called from robertblust/conventions
-at the pinned tag and shown by GitHub as `conventions / conventions`. The prose check leaves out
-`target`, build output.
+Four jobs, all required by the ruleset on `main`: `verify`, `er-drift` and `service-conventions` from the vendored workflow, the last holding the vendored copy to its release and the connector to the list every guestgraph service meets, and `conventions`, called from robertblust/conventions at the pinned tag and shown by GitHub as `conventions / conventions`. The prose check leaves out `target`, build output.
