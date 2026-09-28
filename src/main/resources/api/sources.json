@@ -1,1 +1,1 @@
-{ "sources": [ "guestgraph/engine@aa34403b1839513d90125961c02c7d3b4a89cd5e:specs/005-apaleo-connector/contracts/connector-api.yaml", "guestgraph/engine@6eba9cc823467e4d0d64ac6625c6b03567520fc2:specs/009-remove-subscription/contracts/connector-subscription.yaml" ] }
+{ "sources": [ "guestgraph/engine@f5d21be00542ebd8ab6cc1f55010260bd66dc2f8:specs/005-apaleo-connector/contracts/connector-api.yaml", "guestgraph/engine@f5d21be00542ebd8ab6cc1f55010260bd66dc2f8:specs/009-remove-subscription/contracts/connector-subscription.yaml" ] }
